@@ -24,13 +24,9 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public PasswordAuthAuthenticationToken passwordAuth(String account, String password) {
-        log.info("1★");
         PasswordAuthAuthenticationToken token = new PasswordAuthAuthenticationToken(account, password);
-        log.info("2★");
         Authentication authentication = authenticationManager.authenticate(token);
-        log.info("3★");
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        log.info("4★");
         return (PasswordAuthAuthenticationToken) authentication;
     }
 

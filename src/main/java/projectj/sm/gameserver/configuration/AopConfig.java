@@ -25,7 +25,8 @@ public class AopConfig {
     private long retentionMinutes;
     private final JwtAuthTokenProvider tokenProvider;
 
-    @AfterReturning(value = "execution(* projectj.sm.gameserver.controller.*.*(..)) " , returning = "result")
+    @AfterReturning(value = "execution(* projectj.sm.gameserver.controller.*.*(..)) && " +
+            "!execution(* projectj.sm.gameserver.controller.CommonController.login(..)) " , returning = "result")
     public Object After(Object result) throws Throwable {
         if (result != null){
             Map<String, String> claims = new HashMap<>();

@@ -1,6 +1,7 @@
 package projectj.sm.gameserver.configuration;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,7 @@ import projectj.sm.gameserver.filter.JwtFilter;
 import projectj.sm.gameserver.security.JwtAuthTokenProvider;
 
 
+@Log
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -41,7 +43,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().authorizeRequests()
                     .antMatchers("/v1/login").permitAll()
-                    .antMatchers("/v1/tt").permitAll()
                     .antMatchers("/v1/**").authenticated()
                 .anyRequest().permitAll()
                 .and().headers().frameOptions().disable()

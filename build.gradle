@@ -29,6 +29,9 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.postgresql:postgresql:42.2.18'
 
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.13.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
+
     compileOnly 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
