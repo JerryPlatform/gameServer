@@ -2,13 +2,16 @@ package projectj.sm.gameserver;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.java.Log;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
+@Log
 public class CommonUtil {
     public static String getLocalTime() {
         Date date = new Date();
@@ -34,5 +37,21 @@ public class CommonUtil {
                 .replace("[", "")
                 .replace("]", "");
         return data;
+    }
+
+    public static Map<String, String> redisJsonToMap(String jsonText) throws JsonProcessingException {
+        Map<String, String> resultMap = new HashMap<>();
+        jsonText = jsonText
+                .replace("{", "")
+                .replace("}", "")
+                .replaceAll(" ", "");
+
+        String[] splitText = jsonText.split(",");
+        for (String text : splitText) {
+            String[] keyValueText = text.split("=");
+            resultMap.put(keyValueText[0], keyValueText[1]);
+        }
+
+        return resultMap;
     }
 }
