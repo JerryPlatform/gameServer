@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import projectj.sm.gameserver.CommonUtil;
-import projectj.sm.gameserver.ContextUtil;
+import projectj.sm.gameserver.RedisUtil;
 import projectj.sm.gameserver.domain.ChatRoom;
 import projectj.sm.gameserver.dto.ChatRoomDto;
 import projectj.sm.gameserver.dto.ChattingMessageDto;
@@ -30,6 +31,8 @@ import java.util.Map;
 @EnableScheduling
 @RequiredArgsConstructor
 public class ChatController {
+
+    private final RedisUtil redisUtil;
 
     private final SimpMessagingTemplate template;
 
@@ -56,11 +59,12 @@ public class ChatController {
     }
 
     @MessageMapping("/message/chatroom")
-    public void sendChattingMessage(ChattingMessageDto dto) throws JsonProcessingException {
+    public void sendChattingMessage(ChattingMessageDto dto, @Header("simpSessionId") String simpSessionId) throws JsonProcessingException {
         ChatRoom chatRoom = chatRoomService.findByChatRoom(dto.getChatRoomId());
+        Map<String, Object> userInfo = getSessionUser(simpSessionId);
 
         Map<String, Object> messageMapping = new HashMap<>();
-        messageMapping.put("userName", ContextUtil.getCredential().getName());
+        messageMapping.put("userName", userInfo.get("userName"));
         messageMapping.put("messageContent", dto.getMessageContent());
         messageMapping.put("date", CommonUtil.getLocalTime());
         messageMapping.put("authority", "user");
@@ -94,7 +98,7 @@ public class ChatController {
 
     @EventListener
     public void sessionSubscribeEvent(SessionSubscribeEvent event) throws JsonProcessingException {
-        String subscribeId = CommonUtil.extractDataFromEventMessages(event, "id");
+        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
         String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
 
         if (subscribeAddress.contains("/sub/chatroom/list/")) {
@@ -103,40 +107,44 @@ public class ChatController {
 
         if (subscribeAddress.contains("/sub/chatting/chatroom/")) {
             Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
-            createUserChatSession(chatRoomId, subscribeId);
+            createUserChatSession(chatRoomId, simpSessionId);
             userChatRoomSessionSynchroization(chatRoomId);
+            Map<String, Object> userInfo = getSessionUser(simpSessionId);
 
-            String message = notificationMessageMapping(ContextUtil.getCredential().getName() + "님이 채팅방에 입장하였습니다.");
+            String message = notificationMessageMapping(userInfo.get("userName") + "님이 채팅방에 입장하였습니다.");
             template.convertAndSend("/sub/chatting/chatroom/" + chatRoomId, message);
         }
     }
 
     @EventListener
     public void SessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
-        String subscribeId = CommonUtil.extractDataFromEventMessages(event, "id");
+        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
         String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
 
         if (subscribeAddress.contains("/sub/chatting/chatroom/")) {
+            Map<String, Object> userInfo = getSessionUser(simpSessionId);
             Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
-            removeUserChatSession(subscribeId);
+            removeUserChatSession(simpSessionId);
             userChatRoomSessionSynchroization(chatRoomId);
 
-            String message = notificationMessageMapping(ContextUtil.getCredential().getName() + "님이 채팅방에 퇴장하였습니다.");
+            String message = notificationMessageMapping(userInfo.get("userName") + "님이 채팅방에 퇴장하였습니다.");
             template.convertAndSend("/sub/chatting/chatroom/" + chatRoomId, message);
         }
     }
 
-    public void createUserChatSession(Long roomId, String subscribeId) {
+    public void createUserChatSession(Long roomId, String simpSessionId) throws JsonProcessingException {
+        Map<String, String> token = CommonUtil.redisJsonToMap(redisUtil.getData(simpSessionId));
         Map<String, Object> userChatSession = new HashMap<>();
         userChatSession.put("chatRoomId", roomId);
-        userChatSession.put("userId", ContextUtil.getCredential().getId());
-        userChatSession.put("userName", ContextUtil.getCredential().getName());
-        userChatSession.put("subscribeId", subscribeId);
+        userChatSession.put("userId", token.get("id"));
+        userChatSession.put("userAccount", token.get("account"));
+        userChatSession.put("userName", token.get("name"));
+        userChatSession.put("simpSessionId", simpSessionId);
         userChatSessions.add(userChatSession);
     }
 
-    public void removeUserChatSession(String subscribeId) {
-        userChatSessions.removeIf(map -> map.get("subscribeId").equals(subscribeId));
+    public void removeUserChatSession(String simpSessionId) {
+        userChatSessions.removeIf(map -> map.get("simpSessionId").equals(simpSessionId));
     }
 
     public void userChatRoomSessionSynchroization(Long chatRoomId) throws JsonProcessingException {
@@ -144,8 +152,9 @@ public class ChatController {
         userChatSessions.stream().filter(map -> map.get("chatRoomId").equals(chatRoomId)).forEach(map -> {
             Map<String, Object> userChatRoomSession = new HashMap<>();
             userChatRoomSession.put("userId", map.get("userId"));
+            userChatRoomSession.put("userAccount", map.get("userAccount"));
             userChatRoomSession.put("userName", map.get("userName"));
-            userChatRoomSession.put("subscribeId", map.get("subscribeId"));
+            userChatRoomSession.put("simpSessionId", map.get("simpSessionId"));
             userChatRoomSessions.add(userChatRoomSession);
         });
         String message = CommonUtil.objectToJsonString(userChatRoomSessions);
@@ -159,6 +168,12 @@ public class ChatController {
         messageMapping.put("date", CommonUtil.getLocalTime());
         messageMapping.put("authority", "notice");
         return CommonUtil.objectToJsonString(messageMapping);
+    }
+
+    public Map<String, Object> getSessionUser(String simpSessionId) {
+        return userChatSessions.stream()
+                .filter(map -> map.get("simpSessionId").equals(simpSessionId))
+                .findFirst().get();
     }
 
 }
