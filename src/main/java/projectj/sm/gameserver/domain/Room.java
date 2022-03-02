@@ -9,7 +9,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-public class ChatRoom {
+public class Room {
     @Id
     @GeneratedValue(generator = "chat_gen")
     @Setter(AccessLevel.PROTECTED)

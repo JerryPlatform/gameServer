@@ -2,11 +2,11 @@ package projectj.sm.gameserver.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import projectj.sm.gameserver.domain.ChatRoom;
+import projectj.sm.gameserver.domain.Room;
 
 import java.util.List;
 
-public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
-    @Query("select chatroom from ChatRoom chatroom where chatroom.type = :type ")
-    List<ChatRoom> getChatRoomListByType(ChatRoom.Type type);
+public interface ChatRoomRepository extends JpaRepository<Room, Long> {
+    @Query("select room from Room room where room.type = :type ")
+    List<Room> getChatRoomListByType(Room.Type type);
 }

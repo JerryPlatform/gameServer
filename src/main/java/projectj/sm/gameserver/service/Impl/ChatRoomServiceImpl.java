@@ -1,6 +1,6 @@
 package projectj.sm.gameserver.service.Impl;
 
-import projectj.sm.gameserver.domain.ChatRoom;
+import projectj.sm.gameserver.domain.Room;
 import projectj.sm.gameserver.dto.ChatRoomDto;
 import projectj.sm.gameserver.dto.SecretChatRoomVerificationDto;
 import projectj.sm.gameserver.repository.ChatRoomRepository;
@@ -19,28 +19,28 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
 
     @Override
-    public List<ChatRoom> getChatRoomAllList() {
+    public List<Room> getChatRoomAllList() {
         return chatRoomRepository.findAll();
     }
 
     @Override
-    public ChatRoom findByChatRoom(Long id) {
+    public Room findByChatRoom(Long id) {
         return chatRoomRepository.getById(id);
     }
 
     @Override
-    public List<ChatRoom> getChatRoomListByType(ChatRoom.Type type) {
+    public List<Room> getChatRoomListByType(Room.Type type) {
         return chatRoomRepository.getChatRoomListByType(type);
     }
 
     @Transactional
     @Override
     public void createChatRoom(ChatRoomDto dto) {
-        ChatRoom chatRoom = new ChatRoom();
-        chatRoom.setRoomName(dto.getRoomName());
-        chatRoom.setPassword(dto.getPassword());
-        chatRoom.setType(dto.getType());
-        chatRoomRepository.save(chatRoom);
+        Room room = new Room();
+        room.setRoomName(dto.getRoomName());
+        room.setPassword(dto.getPassword());
+        room.setType(dto.getType());
+        chatRoomRepository.save(room);
     }
 
     @Transactional
@@ -51,7 +51,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     public Boolean SecretChatRoomVerification(SecretChatRoomVerificationDto dto) {
-        ChatRoom chatRoom = chatRoomRepository.getById(dto.getChatRoomId());
-        return chatRoom.getPassword().equals(dto.getPassword());
+        Room room = chatRoomRepository.getById(dto.getChatRoomId());
+        return room.getPassword().equals(dto.getPassword());
     }
 }

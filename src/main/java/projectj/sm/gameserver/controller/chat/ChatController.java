@@ -4,10 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.context.event.EventListener;
-import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +13,7 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import projectj.sm.gameserver.CommonUtil;
 import projectj.sm.gameserver.RedisUtil;
-import projectj.sm.gameserver.domain.ChatRoom;
+import projectj.sm.gameserver.domain.Room;
 import projectj.sm.gameserver.dto.ChatRoomDto;
 import projectj.sm.gameserver.dto.ChattingMessageDto;
 import projectj.sm.gameserver.dto.SecretChatRoomVerificationDto;
@@ -53,14 +51,14 @@ public class ChatController {
 
     @DeleteMapping("/{id}/chatroom")
     public void removeChatRoom(@PathVariable Long id) throws JsonProcessingException {
-        ChatRoom.Type type = chatRoomService.findByChatRoom(id).getType();
+        Room.Type type = chatRoomService.findByChatRoom(id).getType();
         chatRoomService.removeChatRoom(id);
         updateChatRoomList(type);
     }
 
     @MessageMapping("/message/chatroom")
     public void sendChattingMessage(ChattingMessageDto dto, @Header("simpSessionId") String simpSessionId) throws JsonProcessingException {
-        ChatRoom chatRoom = chatRoomService.findByChatRoom(dto.getChatRoomId());
+        Room room = chatRoomService.findByChatRoom(dto.getChatRoomId());
         Map<String, Object> userInfo = getSessionUser(simpSessionId);
 
         Map<String, Object> messageMapping = new HashMap<>();
@@ -70,19 +68,19 @@ public class ChatController {
         messageMapping.put("authority", "user");
 
         String message = CommonUtil.objectToJsonString(messageMapping);
-        template.convertAndSend("/sub/chatting/chatroom/" + chatRoom.getId(), message);
+        template.convertAndSend("/sub/chatting/chatroom/" + room.getId(), message);
     }
 
-    public void updateChatRoomList(ChatRoom.Type type) throws JsonProcessingException {
-        List<ChatRoom> chatRoomList = chatRoomService.getChatRoomListByType(type);
+    public void updateChatRoomList(Room.Type type) throws JsonProcessingException {
+        List<Room> roomList = chatRoomService.getChatRoomListByType(type);
         List<Map<String, Object>> chatRoomInfos = new ArrayList<>();
 
-        for (ChatRoom chatRoom : chatRoomList) {
+        for (Room room : roomList) {
             Map<String, Object> roomInfo = new HashMap<>();
-            roomInfo.put("chatRoomId", chatRoom.getId());
-            roomInfo.put("chatRoomName", chatRoom.getRoomName());
-            roomInfo.put("userCount", userChatSessions.stream().filter(map -> map.get("chatRoomId").equals(chatRoom.getId())).count());
-            roomInfo.put("private", chatRoom.getPassword() != null ? true : false);
+            roomInfo.put("chatRoomId", room.getId());
+            roomInfo.put("chatRoomName", room.getRoomName());
+            roomInfo.put("userCount", userChatSessions.stream().filter(map -> map.get("chatRoomId").equals(room.getId())).count());
+            roomInfo.put("private", room.getPassword() != null ? true : false);
             chatRoomInfos.add(roomInfo);
         }
 
@@ -91,7 +89,7 @@ public class ChatController {
     }
 
     public void updateChatRoomListAll() throws JsonProcessingException {
-        for (ChatRoom.Type type : ChatRoom.Type.values()) {
+        for (Room.Type type : Room.Type.values()) {
             updateChatRoomList(type);
         }
     }
