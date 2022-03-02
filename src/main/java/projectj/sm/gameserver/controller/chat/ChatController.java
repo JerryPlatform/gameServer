@@ -18,6 +18,7 @@ import projectj.sm.gameserver.dto.ChatRoomDto;
 import projectj.sm.gameserver.dto.ChattingMessageDto;
 import projectj.sm.gameserver.dto.SecretChatRoomVerificationDto;
 import projectj.sm.gameserver.service.ChatRoomService;
+import projectj.sm.gameserver.vo.UserChatSession;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ public class ChatController {
 
     private final ChatRoomService chatRoomService;
 
-    List<Map<String, Object>> userChatSessions = new ArrayList<>();
+    public static List<UserChatSession> UserChatSessions = new ArrayList<>();
 
     @PostMapping("/secret/chatroom/verification")
     public Boolean secretChatRoomVerification(@RequestBody SecretChatRoomVerificationDto dto) {
@@ -59,10 +60,10 @@ public class ChatController {
     @MessageMapping("/message/chatroom")
     public void sendChattingMessage(ChattingMessageDto dto, @Header("simpSessionId") String simpSessionId) throws JsonProcessingException {
         Room room = chatRoomService.findByChatRoom(dto.getChatRoomId());
-        Map<String, Object> userInfo = getSessionUser(simpSessionId);
+        UserChatSession userInfo = getSessionUser(simpSessionId);
 
         Map<String, Object> messageMapping = new HashMap<>();
-        messageMapping.put("userName", userInfo.get("userName"));
+        messageMapping.put("userName", userInfo.getUserName());
         messageMapping.put("messageContent", dto.getMessageContent());
         messageMapping.put("date", CommonUtil.getLocalTime());
         messageMapping.put("authority", "user");
@@ -79,7 +80,7 @@ public class ChatController {
             Map<String, Object> roomInfo = new HashMap<>();
             roomInfo.put("chatRoomId", room.getId());
             roomInfo.put("chatRoomName", room.getRoomName());
-            roomInfo.put("userCount", userChatSessions.stream().filter(map -> map.get("chatRoomId").equals(room.getId())).count());
+            roomInfo.put("userCount", UserChatSessions.stream().filter(userChatSession -> userChatSession.getChatRoomId().equals(room.getId())).count());
             roomInfo.put("private", room.getPassword() != null ? true : false);
             chatRoomInfos.add(roomInfo);
         }
@@ -107,9 +108,9 @@ public class ChatController {
             Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
             createUserChatSession(chatRoomId, simpSessionId);
             userChatRoomSessionSynchroization(chatRoomId);
-            Map<String, Object> userInfo = getSessionUser(simpSessionId);
+            UserChatSession userInfo = getSessionUser(simpSessionId);
 
-            String message = notificationMessageMapping(userInfo.get("userName") + "님이 채팅방에 입장하였습니다.");
+            String message = notificationMessageMapping(userInfo.getUserName() + "님이 채팅방에 입장하였습니다.");
             template.convertAndSend("/sub/chatting/chatroom/" + chatRoomId, message);
         }
     }
@@ -120,39 +121,40 @@ public class ChatController {
         String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
 
         if (subscribeAddress.contains("/sub/chatting/chatroom/")) {
-            Map<String, Object> userInfo = getSessionUser(simpSessionId);
+            UserChatSession userInfo = getSessionUser(simpSessionId);
             Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
             removeUserChatSession(simpSessionId);
             userChatRoomSessionSynchroization(chatRoomId);
 
-            String message = notificationMessageMapping(userInfo.get("userName") + "님이 채팅방에 퇴장하였습니다.");
+            String message = notificationMessageMapping(userInfo.getUserName() + "님이 채팅방에 퇴장하였습니다.");
             template.convertAndSend("/sub/chatting/chatroom/" + chatRoomId, message);
         }
     }
 
     public void createUserChatSession(Long roomId, String simpSessionId) throws JsonProcessingException {
         Map<String, String> token = CommonUtil.redisJsonToMap(redisUtil.getData(simpSessionId));
-        Map<String, Object> userChatSession = new HashMap<>();
-        userChatSession.put("chatRoomId", roomId);
-        userChatSession.put("userId", token.get("id"));
-        userChatSession.put("userAccount", token.get("account"));
-        userChatSession.put("userName", token.get("name"));
-        userChatSession.put("simpSessionId", simpSessionId);
-        userChatSessions.add(userChatSession);
+        UserChatSession userChatSession = UserChatSession.builder()
+                .chatRoomId(roomId)
+                .userId(Long.valueOf(token.get("id")))
+                .userAccount(token.get("account"))
+                .userName(token.get("name"))
+                .simpSessionId(simpSessionId)
+                .build();
+        UserChatSessions.add(userChatSession);
     }
 
     public void removeUserChatSession(String simpSessionId) {
-        userChatSessions.removeIf(map -> map.get("simpSessionId").equals(simpSessionId));
+        UserChatSessions.removeIf(userChatSession -> userChatSession.getSimpSessionId().equals(simpSessionId));
     }
 
     public void userChatRoomSessionSynchroization(Long chatRoomId) throws JsonProcessingException {
         List<Map<String, Object>> userChatRoomSessions = new ArrayList<>();
-        userChatSessions.stream().filter(map -> map.get("chatRoomId").equals(chatRoomId)).forEach(map -> {
+        UserChatSessions.stream().filter(userChatSession -> userChatSession.getChatRoomId().equals(chatRoomId)).forEach(userChatSession -> {
             Map<String, Object> userChatRoomSession = new HashMap<>();
-            userChatRoomSession.put("userId", map.get("userId"));
-            userChatRoomSession.put("userAccount", map.get("userAccount"));
-            userChatRoomSession.put("userName", map.get("userName"));
-            userChatRoomSession.put("simpSessionId", map.get("simpSessionId"));
+            userChatRoomSession.put("userId", userChatSession.getUserId());
+            userChatRoomSession.put("userAccount", userChatSession.getUserAccount());
+            userChatRoomSession.put("userName", userChatSession.getUserName());
+            userChatRoomSession.put("simpSessionId", userChatSession.getSimpSessionId());
             userChatRoomSessions.add(userChatRoomSession);
         });
         String message = CommonUtil.objectToJsonString(userChatRoomSessions);
@@ -168,9 +170,9 @@ public class ChatController {
         return CommonUtil.objectToJsonString(messageMapping);
     }
 
-    public Map<String, Object> getSessionUser(String simpSessionId) {
-        return userChatSessions.stream()
-                .filter(map -> map.get("simpSessionId").equals(simpSessionId))
+    public UserChatSession getSessionUser(String simpSessionId) {
+        return UserChatSessions.stream()
+                .filter(userChatSession -> userChatSession.getSimpSessionId().equals(simpSessionId))
                 .findFirst().get();
     }
 
