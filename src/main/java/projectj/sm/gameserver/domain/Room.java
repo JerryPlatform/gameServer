@@ -21,14 +21,30 @@ public class Room {
 
     private Type type;
 
+    private Status status;
+
     public enum Type implements Meta {
         GENERAL("일반"),
-        DICEGAME("야추다이스"),
+        YAHTZEE("야추다이스"),
         ;
 
         private String desc;
 
         Type(String desc) { this.desc = desc; }
+
+        @Override
+        public String getDescription() { return desc; }
+    }
+
+    public enum Status implements Meta {
+        GENERAL("일반"),
+        PROCEEDING("진행중"),
+
+        ;
+
+        private String desc;
+
+        Status(String desc) { this.desc = desc; }
 
         @Override
         public String getDescription() { return desc; }
