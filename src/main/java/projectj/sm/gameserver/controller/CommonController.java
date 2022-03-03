@@ -68,6 +68,17 @@ public class CommonController {
         return result;
     }
 
+    @GetMapping("/kakao/login")
+    public String kakaoLogin(@RequestParam(value = "code", required = false) String code) {
+        String accessToken = memberService.getKakaoAccessToken(code);
+        HashMap<String, Object> userInfo = memberService.getKakaoUserInfo(accessToken);
+
+        log.info("★" + userInfo.get("email"));
+        log.info("★" + userInfo.get("nickname"));
+
+        return code;
+    }
+
     @PostMapping("/login")
     public ResponseEntity<Response> login(@RequestBody LoginDto loginDto) {
         Result response = Result.builder().build();

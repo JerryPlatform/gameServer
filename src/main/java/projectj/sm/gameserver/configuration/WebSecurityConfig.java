@@ -43,6 +43,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().authorizeRequests()
                     .antMatchers("/v1/login").permitAll()
+                    .antMatchers("/v1/kakao/login").permitAll()
                     .antMatchers("/v1/**").authenticated()
                 .anyRequest().permitAll()
                 .and().headers().frameOptions().disable()

@@ -26,7 +26,8 @@ public class AopConfig {
     private final JwtAuthTokenProvider tokenProvider;
 
     @AfterReturning(value = "execution(* projectj.sm.gameserver.controller.*.*(..)) && " +
-            "!execution(* projectj.sm.gameserver.controller.CommonController.login(..)) " , returning = "result")
+            "!execution(* projectj.sm.gameserver.controller.CommonController.login(..)) &&" +
+            "!execution(* projectj.sm.gameserver.controller.CommonController.kakaoLogin(..)) " , returning = "result")
     public Object After(Object result) throws Throwable {
         if (result != null){
             Map<String, String> claims = new HashMap<>();
