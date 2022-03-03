@@ -60,16 +60,37 @@ public class YahtzeeController {
 
     @EventListener
     public void sessionSubscribeEvent(SessionSubscribeEvent event) throws JsonProcessingException {
+        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
+        String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
+
+        if (subscribeAddress.contains("/sub/yahtzee/score/")) {
+            log.info("1☆" + event);
+            log.info("1☆" + simpSubscriptionId);
+            redisUtil.setData(simpSubscriptionId, subscribeAddress);
+
+            String subscribeAddress1 = redisUtil.getData(simpSubscriptionId);
+            Integer roomId = Integer.valueOf(subscribeAddress1.split("/sub/yahtzee/score/")[1]);
+            log.info("2☆" + roomId);
+        }
     }
 
     @EventListener
     public void SessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
+        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
+        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
+        String subscribeAddress = redisUtil.getData(simpSubscriptionId);
+
+        if (subscribeAddress != null && subscribeAddress.contains("/sub/yahtzee/score/")) {
+            Integer roomId = Integer.valueOf(subscribeAddress.split("/sub/yahtzee/score/")[1]);
+
+        }
+
     }
 
     public void scoreInsert(YahtzeeGameSession.userInfo userInfo, String scoreType, Integer score) {
         switch (scoreType) {
-            case "aces":
-                userInfo.setAces(score);
+            case "ones":
+                userInfo.setOnes(score);
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 if (bonusScoreCheck(userInfo)) {
@@ -154,7 +175,7 @@ public class YahtzeeController {
     }
 
     public boolean bonusScoreCheck(YahtzeeGameSession.userInfo userInfo) {
-        Integer score = userInfo.getAces() + userInfo.getTwos() + userInfo.getThrees()
+        Integer score = userInfo.getOnes() + userInfo.getTwos() + userInfo.getThrees()
                 + userInfo.getFours() + userInfo.getFives() + userInfo.getSixes();
         if (score >= 63) {
             return true;

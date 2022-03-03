@@ -73,7 +73,7 @@ public class YahtzeeServiceImpl implements YahtzeeService {
         Integer[] diceCount = getDiceCount(dto.getDices());
 
         return YahtzeeGameSession.userInfo.builder()
-                .aces(getScore(diceCount, "aces"))
+                .ones(getScore(diceCount, "ones"))
                 .twos(getScore(diceCount,"twos"))
                 .threes(getScore(diceCount,"threes"))
                 .fours(getScore(diceCount,"fours"))
@@ -96,7 +96,7 @@ public class YahtzeeServiceImpl implements YahtzeeService {
 
     public static Integer getScore(Integer[] diceCount, String scoreType) {
         switch (scoreType) {
-            case "aces":
+            case "ones":
                 return diceCount[0] * 1;
             case "twos":
                 return diceCount[1] * 2;

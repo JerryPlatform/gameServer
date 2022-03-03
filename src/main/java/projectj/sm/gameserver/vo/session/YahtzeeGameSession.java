@@ -28,7 +28,7 @@ public class YahtzeeGameSession {
         private String userName;
         private String userAccount;
 
-        private Integer aces;
+        private Integer ones;
         private Integer twos;
         private Integer threes;
         private Integer fours;

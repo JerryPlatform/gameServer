@@ -59,7 +59,7 @@ public class GameServiceImpl implements GameService {
                             .userId(userChatSession.getUserId())
                             .userAccount(userChatSession.getUserAccount())
                             .userName(userChatSession.getUserName())
-                            .aces(0)
+                            .ones(0)
                             .twos(0)
                             .threes(0)
                             .fours(0)
