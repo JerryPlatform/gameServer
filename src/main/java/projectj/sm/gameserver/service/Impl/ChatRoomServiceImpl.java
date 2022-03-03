@@ -1,15 +1,23 @@
 package projectj.sm.gameserver.service.Impl;
 
-import projectj.sm.gameserver.domain.Room;
-import projectj.sm.gameserver.dto.ChatRoomDto;
-import projectj.sm.gameserver.dto.SecretChatRoomVerificationDto;
-import projectj.sm.gameserver.repository.ChatRoomRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import projectj.sm.gameserver.CommonUtil;
+import projectj.sm.gameserver.domain.chat.Room;
+import projectj.sm.gameserver.dto.chat.ChatRoomDto;
+import projectj.sm.gameserver.dto.chat.SecretChatRoomVerificationDto;
+import projectj.sm.gameserver.repository.chat.ChatRoomRepository;
 import projectj.sm.gameserver.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static projectj.sm.gameserver.controller.chat.ChatController.userChatSessions;
 
 @Service
 @Transactional
@@ -17,6 +25,8 @@ import java.util.List;
 public class ChatRoomServiceImpl implements ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
+
+    private final SimpMessagingTemplate template;
 
     @Override
     public List<Room> getChatRoomAllList() {
@@ -40,6 +50,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         room.setRoomName(dto.getRoomName());
         room.setPassword(dto.getPassword());
         room.setType(dto.getType());
+        room.setStatus(Room.Status.GENERAL);
         chatRoomRepository.save(room);
     }
 
@@ -47,6 +58,24 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public void removeChatRoom(Long id) {
         chatRoomRepository.deleteById(id);
+    }
+
+    @Override
+    public void updateChatRoomList(Room.Type type) throws JsonProcessingException {
+        List<Room> roomList = getChatRoomListByType(type);
+        List<Map<String, Object>> chatRoomInfos = new ArrayList<>();
+
+        for (Room room : roomList) {
+            Map<String, Object> roomInfo = new HashMap<>();
+            roomInfo.put("chatRoomId", room.getId());
+            roomInfo.put("chatRoomName", room.getRoomName());
+            roomInfo.put("userCount", userChatSessions.stream().filter(userChatSession -> userChatSession.getChatRoomId().equals(room.getId())).count());
+            roomInfo.put("private", room.getPassword() != null ? true : false);
+            chatRoomInfos.add(roomInfo);
+        }
+
+        String resultValue = CommonUtil.objectToJsonString(chatRoomInfos);
+        template.convertAndSend("/sub/chatroom/list/" + type, resultValue);
     }
 
     @Override

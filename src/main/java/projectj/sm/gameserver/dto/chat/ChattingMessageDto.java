@@ -1,4 +1,4 @@
-package projectj.sm.gameserver.dto;
+package projectj.sm.gameserver.dto.chat;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;

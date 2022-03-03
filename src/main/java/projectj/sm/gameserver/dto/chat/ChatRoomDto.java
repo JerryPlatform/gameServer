@@ -1,8 +1,8 @@
-package projectj.sm.gameserver.dto;
+package projectj.sm.gameserver.dto.chat;
 
 import lombok.Getter;
 import lombok.Setter;
-import projectj.sm.gameserver.domain.Room;
+import projectj.sm.gameserver.domain.chat.Room;
 
 @Getter
 @Setter

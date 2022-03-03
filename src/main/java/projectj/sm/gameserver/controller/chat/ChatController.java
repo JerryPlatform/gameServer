@@ -13,12 +13,12 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import projectj.sm.gameserver.CommonUtil;
 import projectj.sm.gameserver.RedisUtil;
-import projectj.sm.gameserver.domain.Room;
-import projectj.sm.gameserver.dto.ChatRoomDto;
-import projectj.sm.gameserver.dto.ChattingMessageDto;
-import projectj.sm.gameserver.dto.SecretChatRoomVerificationDto;
+import projectj.sm.gameserver.domain.chat.Room;
+import projectj.sm.gameserver.dto.chat.ChatRoomDto;
+import projectj.sm.gameserver.dto.chat.ChattingMessageDto;
+import projectj.sm.gameserver.dto.chat.SecretChatRoomVerificationDto;
 import projectj.sm.gameserver.service.ChatRoomService;
-import projectj.sm.gameserver.vo.UserChatSession;
+import projectj.sm.gameserver.vo.session.UserChatSession;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ public class ChatController {
 
     private final ChatRoomService chatRoomService;
 
-    public static List<UserChatSession> UserChatSessions = new ArrayList<>();
+    public static List<UserChatSession> userChatSessions = new ArrayList<>();
 
     @PostMapping("/secret/chatroom/verification")
     public Boolean secretChatRoomVerification(@RequestBody SecretChatRoomVerificationDto dto) {
@@ -47,14 +47,14 @@ public class ChatController {
     @PutMapping("/chatroom")
     public void createChatRoom(@RequestBody ChatRoomDto dto) throws JsonProcessingException {
         chatRoomService.createChatRoom(dto);
-        updateChatRoomList(dto.getType());
+        chatRoomService.updateChatRoomList(dto.getType());
     }
 
     @DeleteMapping("/{id}/chatroom")
     public void removeChatRoom(@PathVariable Long id) throws JsonProcessingException {
         Room.Type type = chatRoomService.findByChatRoom(id).getType();
         chatRoomService.removeChatRoom(id);
-        updateChatRoomList(type);
+        chatRoomService.updateChatRoomList(type);
     }
 
     @MessageMapping("/message/chatroom")
@@ -72,26 +72,9 @@ public class ChatController {
         template.convertAndSend("/sub/chatting/chatroom/" + room.getId(), message);
     }
 
-    public void updateChatRoomList(Room.Type type) throws JsonProcessingException {
-        List<Room> roomList = chatRoomService.getChatRoomListByType(type);
-        List<Map<String, Object>> chatRoomInfos = new ArrayList<>();
-
-        for (Room room : roomList) {
-            Map<String, Object> roomInfo = new HashMap<>();
-            roomInfo.put("chatRoomId", room.getId());
-            roomInfo.put("chatRoomName", room.getRoomName());
-            roomInfo.put("userCount", UserChatSessions.stream().filter(userChatSession -> userChatSession.getChatRoomId().equals(room.getId())).count());
-            roomInfo.put("private", room.getPassword() != null ? true : false);
-            chatRoomInfos.add(roomInfo);
-        }
-
-        String resultValue = CommonUtil.objectToJsonString(chatRoomInfos);
-        template.convertAndSend("/sub/chatroom/list/" + type, resultValue);
-    }
-
     public void updateChatRoomListAll() throws JsonProcessingException {
         for (Room.Type type : Room.Type.values()) {
-            updateChatRoomList(type);
+            chatRoomService.updateChatRoomList(type);
         }
     }
 
@@ -140,16 +123,16 @@ public class ChatController {
                 .userName(token.get("name"))
                 .simpSessionId(simpSessionId)
                 .build();
-        UserChatSessions.add(userChatSession);
+        userChatSessions.add(userChatSession);
     }
 
     public void removeUserChatSession(String simpSessionId) {
-        UserChatSessions.removeIf(userChatSession -> userChatSession.getSimpSessionId().equals(simpSessionId));
+        userChatSessions.removeIf(userChatSession -> userChatSession.getSimpSessionId().equals(simpSessionId));
     }
 
     public void userChatRoomSessionSynchroization(Long chatRoomId) throws JsonProcessingException {
         List<Map<String, Object>> userChatRoomSessions = new ArrayList<>();
-        UserChatSessions.stream().filter(userChatSession -> userChatSession.getChatRoomId().equals(chatRoomId)).forEach(userChatSession -> {
+        userChatSessions.stream().filter(userChatSession -> userChatSession.getChatRoomId().equals(chatRoomId)).forEach(userChatSession -> {
             Map<String, Object> userChatRoomSession = new HashMap<>();
             userChatRoomSession.put("userId", userChatSession.getUserId());
             userChatRoomSession.put("userAccount", userChatSession.getUserAccount());
@@ -171,7 +154,7 @@ public class ChatController {
     }
 
     public UserChatSession getSessionUser(String simpSessionId) {
-        return UserChatSessions.stream()
+        return userChatSessions.stream()
                 .filter(userChatSession -> userChatSession.getSimpSessionId().equals(simpSessionId))
                 .findFirst().get();
     }

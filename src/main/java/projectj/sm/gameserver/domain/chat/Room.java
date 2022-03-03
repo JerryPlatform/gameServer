@@ -1,8 +1,9 @@
-package projectj.sm.gameserver.domain;
+package projectj.sm.gameserver.domain.chat;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import projectj.sm.gameserver.domain.Meta;
 
 import javax.persistence.*;
 

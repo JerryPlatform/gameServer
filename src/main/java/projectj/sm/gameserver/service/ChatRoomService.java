@@ -1,8 +1,9 @@
 package projectj.sm.gameserver.service;
 
-import projectj.sm.gameserver.domain.Room;
-import projectj.sm.gameserver.dto.ChatRoomDto;
-import projectj.sm.gameserver.dto.SecretChatRoomVerificationDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import projectj.sm.gameserver.domain.chat.Room;
+import projectj.sm.gameserver.dto.chat.ChatRoomDto;
+import projectj.sm.gameserver.dto.chat.SecretChatRoomVerificationDto;
 
 import java.util.List;
 
@@ -12,5 +13,6 @@ public interface ChatRoomService {
     List<Room> getChatRoomListByType(Room.Type type);
     void createChatRoom(ChatRoomDto dto);
     void removeChatRoom(Long id);
+    void updateChatRoomList(Room.Type type) throws JsonProcessingException;
     Boolean SecretChatRoomVerification(SecretChatRoomVerificationDto dto);
 }
