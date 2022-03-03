@@ -8,9 +8,11 @@ import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import projectj.sm.gameserver.domain.Member;
+import projectj.sm.gameserver.dto.MemberDto;
 import projectj.sm.gameserver.repository.MemberRepository;
 import projectj.sm.gameserver.security.PasswordAuthAuthenticationToken;
 import projectj.sm.gameserver.service.MemberService;
@@ -28,6 +30,7 @@ import java.util.List;
 public class MemberServiceImpl implements MemberService {
     private final AuthenticationManager authenticationManager;
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public PasswordAuthAuthenticationToken passwordAuth(String account, String password) {
@@ -97,19 +100,36 @@ public class MemberServiceImpl implements MemberService {
             }
             JsonParser parser = new JsonParser();
             JsonElement element = parser.parse(result);
-
+            log.info("★" + element);
             JsonObject properties = element.getAsJsonObject().get("properties").getAsJsonObject();
             JsonObject kakao_account = element.getAsJsonObject().get("kakao_account").getAsJsonObject();
 
             String nickname = properties.getAsJsonObject().get("nickname").getAsString();
-            String email = kakao_account.getAsJsonObject().get("email").getAsString();
 
             userInfo.put("nickname", nickname);
-            userInfo.put("email", email);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         return userInfo;
+    }
+
+    @Transactional
+    @Override
+    public void memberSave(MemberDto dto) {
+        Member member;
+        if(dto.getId() == null) {
+            member = new Member();
+            member.setPassword(passwordEncoder.encode(dto.getPassword()));
+        } else {
+            member = memberRepository.findById(dto.getId()).get();
+            if(dto.getPassword() != null) {
+                member.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
+        }
+        member.setAccount(dto.getAccount());
+        member.setName(dto.getName());
+
+        memberRepository.save(member);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 import projectj.sm.gameserver.domain.Member;
 import projectj.sm.gameserver.dto.LoginDto;
+import projectj.sm.gameserver.dto.MemberDto;
 import projectj.sm.gameserver.security.JwtAuthToken;
 import projectj.sm.gameserver.security.JwtAuthTokenProvider;
 import projectj.sm.gameserver.security.PasswordAuthAuthenticationToken;
@@ -18,6 +19,7 @@ import projectj.sm.gameserver.vo.MemberVo;
 import projectj.sm.gameserver.vo.Response;
 import projectj.sm.gameserver.vo.Result;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -56,16 +58,9 @@ public class CommonController {
         }
     };
 
-    @GetMapping("/tt")
-    public List<MemberVo> tt() {
-        List<MemberVo> result = new ArrayList<>();
-        for (Member m : memberService.getMemberList()) {
-            MemberVo memberVo = new MemberVo();
-            memberVo.setId(m.getId());
-            memberVo.setAccount(m.getAccount());
-            result.add(memberVo);
-        }
-        return result;
+    @PostMapping("/memver/save")
+    public void memverSave(@Valid @RequestBody MemberDto memberDto) {
+
     }
 
     @GetMapping("/kakao/login")
@@ -73,8 +68,6 @@ public class CommonController {
         String accessToken = memberService.getKakaoAccessToken(code);
         HashMap<String, Object> userInfo = memberService.getKakaoUserInfo(accessToken);
 
-        log.info("★" + userInfo.get("email"));
-        log.info("★" + userInfo.get("nickname"));
 
         return code;
     }
