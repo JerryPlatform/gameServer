@@ -7,11 +7,18 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import projectj.sm.gameserver.CommonUtil;
+import projectj.sm.gameserver.domain.game.yahtzee.YahtzeeGameResult;
+import projectj.sm.gameserver.domain.game.yahtzee.YahtzeePlayMember;
 import projectj.sm.gameserver.dto.game.yahtzee.ExpectedScoreDto;
+import projectj.sm.gameserver.repository.game.yahtzee.YahtzeeGameRelativeRecordRepository;
+import projectj.sm.gameserver.repository.game.yahtzee.YahtzeeGameResultRepository;
 import projectj.sm.gameserver.service.YahtzeeService;
+import projectj.sm.gameserver.vo.YahtzeeGameRankVo;
 import projectj.sm.gameserver.vo.session.YahtzeeGameSession;
 
-import java.util.Arrays;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static projectj.sm.gameserver.controller.game.YahtzeeController.yahtzeeGameSessions;
 
@@ -22,6 +29,28 @@ import static projectj.sm.gameserver.controller.game.YahtzeeController.yahtzeeGa
 public class YahtzeeServiceImpl implements YahtzeeService {
 
     private final SimpMessagingTemplate template;
+
+    private final YahtzeeGameResultRepository yahtzeeGameResultRepository;
+
+    private final YahtzeeGameRelativeRecordRepository yahtzeeGameRelativeRecordRepository;
+
+    private Function<YahtzeeGameResult, YahtzeeGameRankVo> rankMap = yahtzeeGameResult -> {
+
+        List<Map<String, Object>> playMembers = new ArrayList<>();
+        for (YahtzeePlayMember user : yahtzeeGameResult.getYahtzeeGamePlayMember()) {
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("name", user.getMember().getName());
+            userInfo.put("score", user.getTotalScore());
+            playMembers.add(userInfo);
+        }
+
+        return YahtzeeGameRankVo.builder()
+                .id(yahtzeeGameResult.getId())
+                .winner(yahtzeeGameResult.getWinner().getName())
+                .winnerScore(yahtzeeGameResult.getTotalScore())
+                .playMembers(playMembers)
+                .build();
+    };
 
     @Override
     public YahtzeeGameSession getYahtzeeGameSession(Long roomId) {
@@ -58,6 +87,11 @@ public class YahtzeeServiceImpl implements YahtzeeService {
                 .chance(getScore(diceCount,"chance"))
                 .yahtzee(getScore(diceCount,"yahtzee"))
                 .build();
+    }
+
+    @Override
+    public List<YahtzeeGameRankVo> getYahtzeeGameRank() {
+        return yahtzeeGameResultRepository.findTop10ByOrderByTotalScoreDesc().stream().map(rankMap).collect(Collectors.toList());
     }
 
     public static Integer getScore(Integer[] diceCount, String scoreType) {

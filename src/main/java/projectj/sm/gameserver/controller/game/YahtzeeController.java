@@ -17,6 +17,7 @@ import projectj.sm.gameserver.dto.game.yahtzee.ExpectedScoreDto;
 import projectj.sm.gameserver.dto.game.yahtzee.UpdateScoreDto;
 import projectj.sm.gameserver.service.ChatRoomService;
 import projectj.sm.gameserver.service.YahtzeeService;
+import projectj.sm.gameserver.vo.YahtzeeGameRankVo;
 import projectj.sm.gameserver.vo.session.YahtzeeGameSession;
 
 import java.util.*;
@@ -50,6 +51,11 @@ public class YahtzeeController {
     @PostMapping("/expected/score")
     public YahtzeeGameSession.userInfo getExpectedScore(@RequestBody ExpectedScoreDto dto) {
         return yahtzeeService.getExpectedScore(dto);
+    }
+
+    @GetMapping("/rank/yahtzee")
+    public List<YahtzeeGameRankVo> getYahtzeeGameRank() {
+        return yahtzeeService.getYahtzeeGameRank();
     }
 
     @EventListener
