@@ -30,6 +30,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 				.allowedMethods("GET", "POST", "PUT", "DELETE")
 				.allowCredentials(false)
 				.maxAge(-1);
+		registry.addMapping("/**")
+				.allowedOrigins("*")
+				.allowedMethods("GET", "POST", "PUT", "DELETE")
+				.allowCredentials(false)
+				.maxAge(-1);
 	}
 
 	@Override
