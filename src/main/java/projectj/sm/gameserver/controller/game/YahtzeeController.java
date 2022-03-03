@@ -60,14 +60,10 @@ public class YahtzeeController {
 
     @EventListener
     public void sessionSubscribeEvent(SessionSubscribeEvent event) throws JsonProcessingException {
-        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
     }
 
     @EventListener
     public void SessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
-        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
     }
 
     public void scoreInsert(YahtzeeGameSession.userInfo userInfo, String scoreType, Integer score) {
