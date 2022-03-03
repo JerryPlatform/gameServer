@@ -71,6 +71,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             roomInfo.put("chatRoomName", room.getRoomName());
             roomInfo.put("userCount", userChatSessions.stream().filter(userChatSession -> userChatSession.getChatRoomId().equals(room.getId())).count());
             roomInfo.put("private", room.getPassword() != null ? true : false);
+            roomInfo.put("status", room.getStatus().getDescription());
             chatRoomInfos.add(roomInfo);
         }
 
