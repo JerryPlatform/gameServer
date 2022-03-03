@@ -47,7 +47,7 @@ public class YahtzeeController {
         }
     }
 
-    @PostMapping("/expected/socre")
+    @PostMapping("/expected/score")
     public YahtzeeGameSession.userInfo getExpectedScore(@RequestBody ExpectedScoreDto dto) {
         return yahtzeeService.getExpectedScore(dto);
     }
