@@ -106,8 +106,6 @@ public class ChatController {
         String redisSubChattingChatRoomCacheKey = "/sub/chatting/chatroom/";
         String redisSubChattingChatRoomCacheValue = redisUtil.getData(redisSubChattingChatRoomCacheKey + simpSessionId);
 
-        log.info("★" + redisSubChattingChatRoomCacheKey + simpSessionId);
-
         if (redisSubChattingChatRoomCacheValue != null) {
             UserChatSession userInfo = getSessionUser(simpSessionId);
             Long chatRoomId = Long.parseLong(redisSubChattingChatRoomCacheValue.split("/sub/chatting/chatroom/")[1]);
