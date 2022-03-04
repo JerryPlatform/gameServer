@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import projectj.sm.gameserver.domain.Member;
 import projectj.sm.gameserver.dto.MemberDto;
+import projectj.sm.gameserver.dto.MemberUseDto;
+import projectj.sm.gameserver.exception.ErrorCode;
 import projectj.sm.gameserver.repository.MemberRepository;
 import projectj.sm.gameserver.security.PasswordAuthAuthenticationToken;
 import projectj.sm.gameserver.service.MemberService;
@@ -35,7 +38,10 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public PasswordAuthAuthenticationToken passwordAuth(String account, String password) {
         PasswordAuthAuthenticationToken token = new PasswordAuthAuthenticationToken(account, password);
-        Authentication authentication = authenticationManager.authenticate(token);
+        Authentication authentication = null;
+        try {
+            authentication = authenticationManager.authenticate(token);
+        } catch (LockedException e) { throw new LockedException(ErrorCode.LOCKED.getMessage()); }
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return (PasswordAuthAuthenticationToken) authentication;
     }
@@ -83,7 +89,40 @@ public class MemberServiceImpl implements MemberService {
         return access_Token;
     }
 
+    @Transactional
     @Override
+    public void memberSave(MemberDto dto) {
+        Member member;
+        if(dto.getId() == null) {
+            member = new Member();
+            member.setPassword(passwordEncoder.encode(dto.getPassword()));
+        } else {
+            member = memberRepository.findById(dto.getId()).get();
+            if(dto.getPassword() != null) {
+                member.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
+        }
+        member.setAccount(dto.getAccount());
+        member.setName(dto.getName());
+        member.setValid(false);
+        member.setRole(Member.Role.ROLE_USER);
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    @Override
+    public boolean memberUse(MemberUseDto dto) {
+        HashMap<String, Object> userInfo = getKakaoUserInfo(dto.getAccessToken());
+        if (userInfo.get("nickname") != null) {
+            Member member = memberRepository.getById(dto.getMemberId());
+            member.setValid(true);
+            memberRepository.save(member);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public HashMap<String, Object> getKakaoUserInfo(String accessToken) {
         HashMap<String, Object> userInfo = new HashMap<>();
         String reqURL = "https://kapi.kakao.com/v2/user/me";
@@ -112,24 +151,5 @@ public class MemberServiceImpl implements MemberService {
         }
 
         return userInfo;
-    }
-
-    @Transactional
-    @Override
-    public void memberSave(MemberDto dto) {
-        Member member;
-        if(dto.getId() == null) {
-            member = new Member();
-            member.setPassword(passwordEncoder.encode(dto.getPassword()));
-        } else {
-            member = memberRepository.findById(dto.getId()).get();
-            if(dto.getPassword() != null) {
-                member.setPassword(passwordEncoder.encode(dto.getPassword()));
-            }
-        }
-        member.setAccount(dto.getAccount());
-        member.setName(dto.getName());
-
-        memberRepository.save(member);
     }
 }

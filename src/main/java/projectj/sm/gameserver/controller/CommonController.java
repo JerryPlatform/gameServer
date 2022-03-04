@@ -7,10 +7,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.*;
 import projectj.sm.gameserver.domain.Member;
 import projectj.sm.gameserver.dto.LoginDto;
 import projectj.sm.gameserver.dto.MemberDto;
+import projectj.sm.gameserver.dto.MemberUseDto;
 import projectj.sm.gameserver.security.JwtAuthToken;
 import projectj.sm.gameserver.security.JwtAuthTokenProvider;
 import projectj.sm.gameserver.security.PasswordAuthAuthenticationToken;
@@ -58,24 +60,38 @@ public class CommonController {
         }
     };
 
-    @PostMapping("/memver/save")
+    @PutMapping("/member/save")
     public void memverSave(@Valid @RequestBody MemberDto memberDto) {
-
+        memberService.memberSave(memberDto);
     }
 
     @GetMapping("/kakao/login")
     public String kakaoLogin(@RequestParam(value = "code", required = false) String code) {
         String accessToken = memberService.getKakaoAccessToken(code);
-        HashMap<String, Object> userInfo = memberService.getKakaoUserInfo(accessToken);
+        return accessToken;
+    }
 
-
-        return code;
+    @PutMapping("/member/use")
+    public ResponseEntity<Response> memberUse(@RequestBody MemberUseDto dto) {
+        if (memberService.memberUse(dto)) {
+            return new ResponseEntity<>(Response.builder().response(Result.builder().build()).contents("success").build(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(Response.builder().response(Result.builder().message("accessToken error").status(500).build()).contents("accessToken error").build(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<Response> login(@RequestBody LoginDto loginDto) {
         Result response = Result.builder().build();
-        PasswordAuthAuthenticationToken user = memberService.passwordAuth(loginDto.getAccount(), loginDto.getPassword());
+        PasswordAuthAuthenticationToken user;
+        try {
+            user = memberService.passwordAuth(loginDto.getAccount(), loginDto.getPassword());
+        } catch (LockedException e) {
+            return new ResponseEntity<>(Response.builder()
+                    .response(Result.builder().message("kakao login authentication required").status(500).build())
+                    .contents("kakao login authentication required")
+                    .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         MemberVo vo = makeToken.apply(user);
         if (vo == null) {
             return new ResponseEntity<>(Response.<MemberVo>builder().response(Result.builder().status(500).message("error")
