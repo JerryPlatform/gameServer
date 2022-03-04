@@ -139,7 +139,6 @@ public class MemberServiceImpl implements MemberService {
             }
             JsonParser parser = new JsonParser();
             JsonElement element = parser.parse(result);
-            log.info("★" + element);
             JsonObject properties = element.getAsJsonObject().get("properties").getAsJsonObject();
             JsonObject kakao_account = element.getAsJsonObject().get("kakao_account").getAsJsonObject();
 

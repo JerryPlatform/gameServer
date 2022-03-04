@@ -29,8 +29,6 @@ public class StompHandler implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        log.info("★" + message.getHeaders().get("simpMessageType").toString());
-
         if (message.getHeaders().get("simpMessageType").toString().contains("CONNECT")) {
             if (accessor.getFirstNativeHeader(AUTHORIZATION_HEADER) != null) {
                 Optional<String> token = Optional.of(accessor.getFirstNativeHeader("x-auth-token"));

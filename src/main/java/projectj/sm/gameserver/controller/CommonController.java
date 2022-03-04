@@ -84,7 +84,6 @@ public class CommonController {
     public ResponseEntity<Response> login(@RequestBody LoginDto loginDto) {
         Result response = Result.builder().build();
         PasswordAuthAuthenticationToken user;
-        log.info("★");
         try {
             user = memberService.passwordAuth(loginDto.getAccount(), loginDto.getPassword());
         } catch (LockedException e) {
