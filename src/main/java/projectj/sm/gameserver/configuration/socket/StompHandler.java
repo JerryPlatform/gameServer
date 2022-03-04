@@ -1,6 +1,5 @@
 package projectj.sm.gameserver.configuration.socket;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -11,17 +10,12 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import projectj.sm.gameserver.CommonUtil;
-import projectj.sm.gameserver.ContextUtil;
 import projectj.sm.gameserver.RedisUtil;
 import projectj.sm.gameserver.security.JwtAuthToken;
 import projectj.sm.gameserver.security.JwtAuthTokenProvider;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Log
 @Component
@@ -34,6 +28,8 @@ public class StompHandler implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+
+        log.info("★" + message.getHeaders().get("simpMessageType").toString());
 
         if (message.getHeaders().get("simpMessageType").toString().contains("CONNECT")) {
             if (accessor.getFirstNativeHeader(AUTHORIZATION_HEADER) != null) {
@@ -52,7 +48,13 @@ public class StompHandler implements ChannelInterceptor {
                 }
             }
         }
-        redisUtil.updateKey(accessor.getSessionId(), Duration.ofHours(3));
+        if (message.getHeaders().get("simpMessageType").toString().contains("SUBSCRIBE") ||
+            message.getHeaders().get("simpMessageType").toString().contains("UNSUBSCRIBE")) {
+            redisUtil.updateKey(accessor.getSessionId(), Duration.ofHours(3));
+        }
+        if (message.getHeaders().get("simpMessageType").toString().contains("DISCONNECT")) {
+            redisUtil.deleteData(accessor.getSessionId());
+        }
 
         return message;
     }

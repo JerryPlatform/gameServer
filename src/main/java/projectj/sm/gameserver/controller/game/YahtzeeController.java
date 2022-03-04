@@ -62,24 +62,22 @@ public class YahtzeeController {
     @EventListener
     public void sessionSubscribeEvent(SessionSubscribeEvent event) throws JsonProcessingException {
         String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
+        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
         String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
 
-        log.info("2★");
-
         if (subscribeAddress.contains("/sub/yahtzee/score/")) {
-            redisUtil.setData("sub/yahtzee/score/" + simpSessionId, subscribeAddress);
+            redisUtil.setData(simpSubscriptionId, subscribeAddress);
         }
     }
 
     @EventListener
-    public void SessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
+    public void sessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
         String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
+        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
+        String subscribeAddress = redisUtil.getData(simpSubscriptionId);
 
-        String redisSubYahtzeeScoreCacheKey = "sub/yahtzee/score/";
-        String redisSubYahtzeeScoreCacheValue = redisUtil.getData(redisSubYahtzeeScoreCacheKey + simpSessionId);
-
-        if (redisSubYahtzeeScoreCacheValue != null) {
-            Integer roomId = Integer.valueOf(redisSubYahtzeeScoreCacheValue.split("/sub/yahtzee/score/")[1]);
+        if (subscribeAddress != null && subscribeAddress.contains("/sub/yahtzee/score/")) {
+            Integer roomId = Integer.valueOf(subscribeAddress.split("/sub/yahtzee/score/")[1]);
             Room room = chatRoomService.findByChatRoom(Long.valueOf(roomId));
             if (room.getStatus().equals(Room.Status.PROCEEDING)) {
                 YahtzeeGameSession session = yahtzeeGameSessions.stream()
@@ -101,9 +99,7 @@ public class YahtzeeController {
                 session.setTurnUserName(session.getUserInfos().get(turn).getUserName());
                 yahtzeeService.gameScoreTransfer(Long.valueOf(roomId));
             }
-
         }
-
     }
 
     public void scoreInsert(YahtzeeGameSession.userInfo userInfo, String scoreType, Integer score) {
