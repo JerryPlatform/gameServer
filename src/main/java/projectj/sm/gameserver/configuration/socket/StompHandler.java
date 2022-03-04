@@ -1,4 +1,4 @@
-package projectj.sm.gameserver.configuration;
+package projectj.sm.gameserver.configuration.socket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Claims;

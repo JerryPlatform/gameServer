@@ -1,16 +1,13 @@
-package projectj.sm.gameserver.configuration;
+package projectj.sm.gameserver.configuration.socket;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-
-import java.util.List;
 
 @Log
 @RequiredArgsConstructor

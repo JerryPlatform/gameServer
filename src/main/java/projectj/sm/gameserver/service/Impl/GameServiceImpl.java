@@ -53,12 +53,14 @@ public class GameServiceImpl implements GameService {
                                 .filter(userChatSession -> userChatSession.getChatRoomId().equals(roomId))
                                 .collect(Collectors.toList());
                 List<YahtzeeGameSession.userInfo> userInfos = new ArrayList<>();
+                int count = 0;
                 for (UserChatSession userChatSession : roomVisitors) {
                     YahtzeeGameSession.userInfo userInfo = YahtzeeGameSession.userInfo.builder()
                             .simpSessionId(userChatSession.getSimpSessionId())
                             .userId(userChatSession.getUserId())
                             .userAccount(userChatSession.getUserAccount())
                             .userName(userChatSession.getUserName())
+                            .playerCount(count++)
                             .ones(0)
                             .twos(0)
                             .threes(0)

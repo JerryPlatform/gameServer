@@ -81,7 +81,6 @@ public class ChatController {
     @EventListener
     public void sessionSubscribeEvent(SessionSubscribeEvent event) throws JsonProcessingException {
         String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
         String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
 
         if (subscribeAddress.contains("/sub/chatroom/list/")) {
@@ -89,7 +88,7 @@ public class ChatController {
         }
 
         if (subscribeAddress.contains("/sub/chatting/chatroom/")) {
-            redisUtil.setData(simpSubscriptionId, subscribeAddress);
+            redisUtil.setData("/sub/chatting/chatroom/" + simpSessionId, subscribeAddress);
             Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
             createUserChatSession(chatRoomId, simpSessionId);
             userChatRoomSessionSynchroization(chatRoomId);
@@ -103,18 +102,20 @@ public class ChatController {
     @EventListener
     public void SessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
         String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
 
-        String subscribeAddress = redisUtil.getData(simpSubscriptionId);
+        String redisSubChattingChatRoomCacheKey = "/sub/chatting/chatroom/";
+        String redisSubChattingChatRoomCacheValue = redisUtil.getData(redisSubChattingChatRoomCacheKey + simpSessionId);
 
-        if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
+        log.info("★" + redisSubChattingChatRoomCacheKey + simpSessionId);
+
+        if (redisSubChattingChatRoomCacheValue != null) {
             UserChatSession userInfo = getSessionUser(simpSessionId);
-            Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
+            Long chatRoomId = Long.parseLong(redisSubChattingChatRoomCacheValue.split("/sub/chatting/chatroom/")[1]);
             removeUserChatSession(simpSessionId);
             userChatRoomSessionSynchroization(chatRoomId);
 
             String message = notificationMessageMapping(userInfo.getUserName() + "님이 채팅방에 퇴장하였습니다.");
-            redisUtil.deleteData(simpSubscriptionId);
+            redisUtil.deleteData(redisSubChattingChatRoomCacheKey + simpSessionId);
             template.convertAndSend("/sub/chatting/chatroom/" + chatRoomId, message);
         }
     }

@@ -13,6 +13,7 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import projectj.sm.gameserver.CommonUtil;
 import projectj.sm.gameserver.RedisUtil;
+import projectj.sm.gameserver.domain.chat.Room;
 import projectj.sm.gameserver.dto.game.yahtzee.ExpectedScoreDto;
 import projectj.sm.gameserver.dto.game.yahtzee.UpdateScoreDto;
 import projectj.sm.gameserver.service.ChatRoomService;
@@ -60,28 +61,46 @@ public class YahtzeeController {
 
     @EventListener
     public void sessionSubscribeEvent(SessionSubscribeEvent event) throws JsonProcessingException {
-        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
+        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
         String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
 
-        if (subscribeAddress.contains("/sub/yahtzee/score/")) {
-            log.info("1☆" + event);
-            log.info("1☆" + simpSubscriptionId);
-            redisUtil.setData(simpSubscriptionId, subscribeAddress);
+        log.info("2★");
 
-            String subscribeAddress1 = redisUtil.getData(simpSubscriptionId);
-            Integer roomId = Integer.valueOf(subscribeAddress1.split("/sub/yahtzee/score/")[1]);
-            log.info("2☆" + roomId);
+        if (subscribeAddress.contains("/sub/yahtzee/score/")) {
+            redisUtil.setData("sub/yahtzee/score/" + simpSessionId, subscribeAddress);
         }
     }
 
     @EventListener
     public void SessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
         String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
-        String subscribeAddress = redisUtil.getData(simpSubscriptionId);
 
-        if (subscribeAddress != null && subscribeAddress.contains("/sub/yahtzee/score/")) {
-            Integer roomId = Integer.valueOf(subscribeAddress.split("/sub/yahtzee/score/")[1]);
+        String redisSubYahtzeeScoreCacheKey = "sub/yahtzee/score/";
+        String redisSubYahtzeeScoreCacheValue = redisUtil.getData(redisSubYahtzeeScoreCacheKey + simpSessionId);
+
+        if (redisSubYahtzeeScoreCacheValue != null) {
+            Integer roomId = Integer.valueOf(redisSubYahtzeeScoreCacheValue.split("/sub/yahtzee/score/")[1]);
+            Room room = chatRoomService.findByChatRoom(Long.valueOf(roomId));
+            if (room.getStatus().equals(Room.Status.PROCEEDING)) {
+                YahtzeeGameSession session = yahtzeeGameSessions.stream()
+                        .filter(yahtzeeGameSession -> yahtzeeGameSession.getRoomId().equals(roomId))
+                        .findFirst().get();
+
+                YahtzeeGameSession.userInfo roomOutUser = session.getUserInfos().stream()
+                        .filter(userInfo -> userInfo.getSimpSessionId().equals(simpSessionId))
+                        .findFirst().get();
+
+                for (int i = 1; i <= session.getRemainingTurns(); i++) {
+                    if ((i % session.getUserCount()) == roomOutUser.getPlayerCount()) {
+                        session.setRemainingTurns(session.getRemainingTurns() - 1);
+                    }
+                }
+                session.getUserInfos().removeIf(userInfo -> userInfo.equals(roomOutUser));
+                session.setUserCount(session.getUserInfos().size());
+                int turn = session.getRemainingTurns() % session.getUserCount();
+                session.setTurnUserName(session.getUserInfos().get(turn).getUserName());
+                yahtzeeService.gameScoreTransfer(Long.valueOf(roomId));
+            }
 
         }
 
