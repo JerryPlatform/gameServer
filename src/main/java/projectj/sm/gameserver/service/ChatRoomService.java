@@ -10,6 +10,7 @@ import java.util.List;
 public interface ChatRoomService {
     List<Room> getChatRoomAllList();
     Room findByChatRoom(Long id);
+    Room.Status findByChatRoomStatus(Long id);
     List<Room> getChatRoomListByType(Room.Type type);
     void createChatRoom(ChatRoomDto dto);
     void removeChatRoom(Long id);

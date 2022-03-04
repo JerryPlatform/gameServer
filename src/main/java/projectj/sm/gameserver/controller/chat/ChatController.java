@@ -9,6 +9,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import projectj.sm.gameserver.CommonUtil;
@@ -20,10 +21,7 @@ import projectj.sm.gameserver.dto.chat.SecretChatRoomVerificationDto;
 import projectj.sm.gameserver.service.ChatRoomService;
 import projectj.sm.gameserver.vo.session.UserChatSession;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Log
 @RestController
@@ -83,13 +81,14 @@ public class ChatController {
         String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
         String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
         String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
+        String redisKey = simpSessionId + "/" + simpSubscriptionId;
 
         if (subscribeAddress.contains("/sub/chatroom/list/")) {
             updateChatRoomListAll();
         }
 
         if (subscribeAddress.contains("/sub/chatting/chatroom/")) {
-            redisUtil.setData(simpSubscriptionId, subscribeAddress);
+            redisUtil.setData(redisKey, subscribeAddress);
             Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
             createUserChatSession(chatRoomId, simpSessionId);
             userChatRoomSessionSynchroization(chatRoomId);
@@ -101,21 +100,39 @@ public class ChatController {
     }
 
     @EventListener
+    public void sessionDisconnectEvent(SessionDisconnectEvent event) throws JsonProcessingException {
+        Set<String> keys = redisUtil.getFindKeys(event.getSessionId());
+        for (String key : keys) {
+            String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
+            String subscribeAddress = redisUtil.getData(key);
+
+            if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
+                subChattingChatroomUnsubscribeOrDisconnectProcess(simpSessionId, key, subscribeAddress);
+            }
+        }
+    }
+
+    @EventListener
     public void sessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
         String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
         String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
-        String subscribeAddress = redisUtil.getData(simpSubscriptionId);
+        String redisKey = simpSessionId + "/" + simpSubscriptionId;
+        String subscribeAddress = redisUtil.getData(redisKey);
 
         if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
-            UserChatSession userInfo = getSessionUser(simpSessionId);
-            Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
-            removeUserChatSession(simpSessionId);
-            userChatRoomSessionSynchroization(chatRoomId);
-
-            String message = notificationMessageMapping(userInfo.getUserName() + "님이 채팅방에 퇴장하였습니다.");
-            redisUtil.deleteData(simpSubscriptionId);
-            template.convertAndSend("/sub/chatting/chatroom/" + chatRoomId, message);
+            subChattingChatroomUnsubscribeOrDisconnectProcess(simpSessionId, redisKey, subscribeAddress);
         }
+    }
+
+    public void subChattingChatroomUnsubscribeOrDisconnectProcess(String simpSessionId, String redisKey, String subscribeAddress) throws JsonProcessingException {
+        UserChatSession userInfo = getSessionUser(simpSessionId);
+        Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
+        removeUserChatSession(simpSessionId);
+        userChatRoomSessionSynchroization(chatRoomId);
+
+        String message = notificationMessageMapping(userInfo.getUserName() + "님이 채팅방에 퇴장하였습니다.");
+        redisUtil.deleteData(redisKey);
+        template.convertAndSend("/sub/chatting/chatroom/" + chatRoomId, message);
     }
 
     public void createUserChatSession(Long roomId, String simpSessionId) throws JsonProcessingException {

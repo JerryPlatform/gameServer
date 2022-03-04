@@ -6,12 +6,16 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class RedisUtil {
     private final StringRedisTemplate stringRedisTemplate;
+
+    public Set<String> getFindKeys(String pattern) {
+        return stringRedisTemplate.keys("*" + pattern + "*");
+    }
 
     public String getData(String key) {
         ValueOperations<String,String> valueOperations = stringRedisTemplate.opsForValue();

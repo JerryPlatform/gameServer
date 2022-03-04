@@ -39,6 +39,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     @Override
+    public Room.Status findByChatRoomStatus(Long id) {
+        return chatRoomRepository.getById(id).getStatus();
+    }
+
+    @Override
     public List<Room> getChatRoomListByType(Room.Type type) {
         return chatRoomRepository.getChatRoomListByType(type);
     }
