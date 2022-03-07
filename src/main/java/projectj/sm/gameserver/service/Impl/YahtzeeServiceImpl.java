@@ -36,11 +36,11 @@ public class YahtzeeServiceImpl implements YahtzeeService {
 
     private Function<YahtzeeGameResult, YahtzeeGameRankVo> rankMap = yahtzeeGameResult -> {
 
-        List<Map<String, Object>> playMembers = new ArrayList<>();
+        List<Map<String, String>> playMembers = new ArrayList<>();
         for (YahtzeePlayMember user : yahtzeeGameResult.getYahtzeeGamePlayMember()) {
-            Map<String, Object> userInfo = new HashMap<>();
+            Map<String, String> userInfo = new HashMap<>();
             userInfo.put("name", user.getMember().getName());
-            userInfo.put("score", user.getTotalScore());
+            userInfo.put("score", user.getTotalScore().toString());
             playMembers.add(userInfo);
         }
 

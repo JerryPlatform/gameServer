@@ -1,0 +1,15 @@
+extend type Query {
+    getYahtzeeGameRank : [yahtzeeGameRank]
+}
+
+type yahtzeeGameRank {
+    id : Int
+    winner : String
+    winnerScore : Int
+    playMembers : [member]
+}
+
+type member {
+    name : String
+    score : Int
+}

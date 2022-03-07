@@ -14,5 +14,5 @@ public class YahtzeeGameRankVo {
     private Long id;
     private String winner;
     private Integer winnerScore;
-    private List<Map<String, Object>> playMembers;
+    private List<Map<String, String>> playMembers;
 }
