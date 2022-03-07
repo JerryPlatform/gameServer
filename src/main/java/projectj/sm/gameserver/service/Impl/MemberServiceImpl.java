@@ -65,7 +65,7 @@ public class MemberServiceImpl implements MemberService {
             StringBuilder sb = new StringBuilder();
             sb.append("grant_type=authorization_code");
             sb.append("&client_id=10f8d2706bdb83ab47cae05209b690ea");  //본인이 발급받은 key
-            sb.append("&redirect_uri=https://bf5d-221-164-197-252.ngrok.io/v1/kakao/login");     // 본인이 설정해 놓은 경로
+            sb.append("&redirect_uri=https://5e06-221-164-197-252.ngrok.io/v1/kakao/login");     // 본인이 설정해 놓은 경로
             sb.append("&code=" + code);
             bw.write(sb.toString());
             bw.flush();
