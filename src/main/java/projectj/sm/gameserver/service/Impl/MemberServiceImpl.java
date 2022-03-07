@@ -116,7 +116,7 @@ public class MemberServiceImpl implements MemberService {
         }
         member.setAccount(dto.getAccount());
         member.setName(dto.getName());
-        member.setValid(false);
+        member.setValid(true);
         member.setRole(Member.Role.ROLE_USER);
         memberRepository.save(member);
     }

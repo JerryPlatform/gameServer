@@ -16,5 +16,4 @@ public class MemberDto {
     private String account;
     private String password;
     private String passwordConfirm;
-    private boolean valid;
 }
