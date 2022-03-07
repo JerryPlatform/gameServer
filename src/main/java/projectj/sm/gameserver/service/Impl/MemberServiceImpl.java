@@ -30,10 +30,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Log
 @Service
@@ -47,6 +45,9 @@ public class MemberServiceImpl implements MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthTokenProvider tokenProvider;
     private Integer temporaryUserId = 5000;
+
+    private List<String> prefix = new ArrayList<>(Arrays.asList("똑똑한", "귀여운", "무식한", "착한", "나쁜", "못생긴", "잘생긴", "신기한"));
+    private List<String> noun = new ArrayList<>(Arrays.asList("쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"));
 
     @Override
     public PasswordAuthAuthenticationToken passwordAuth(String account, String password) throws Exception {
@@ -128,18 +129,23 @@ public class MemberServiceImpl implements MemberService {
         HashMap<String, Object> userInfo = getKakaoUserInfo(dto.getAccessToken());
         if (userInfo.get("nickname") != null) {
             Date expiredDate = Date.from(LocalDateTime.now().plusMinutes(retentionMinutes).atZone(ZoneId.systemDefault()).toInstant());
-            Map<String, String> claims = new HashMap<>();
+
             Integer temporaryId = ++temporaryUserId;
+            String temporaryNickName =
+                    prefix.get(ThreadLocalRandom.current().nextInt(0, prefix.size()-1)) +
+                    noun.get(ThreadLocalRandom.current().nextInt(0, noun.size()-1));
+
+            Map<String, String> claims = new HashMap<>();
             claims.put("id", temporaryId.toString());
-            claims.put("account", dto.getNickName());
-            claims.put("name", dto.getNickName());
+            claims.put("account", temporaryNickName);
+            claims.put("name", temporaryNickName);
             claims.put("role", Member.Role.ROLE_USER.toString());
-            String token = tokenProvider.createAuthToken(dto.getNickName(), Member.Role.ROLE_USER.toString(), claims, expiredDate).getToken();
+            String token = tokenProvider.createAuthToken(temporaryNickName, Member.Role.ROLE_USER.toString(), claims, expiredDate).getToken();
 
             return MemberVo.builder()
                     .id(temporaryId.longValue())
-                    .account(dto.getNickName())
-                    .name(dto.getNickName())
+                    .account(temporaryNickName)
+                    .name(temporaryNickName)
                     .token(token)
                     .build();
         } else {

@@ -7,5 +7,4 @@ import lombok.Setter;
 @Setter
 public class MemberUseDto {
     private String accessToken;
-    private String nickName;
 }
