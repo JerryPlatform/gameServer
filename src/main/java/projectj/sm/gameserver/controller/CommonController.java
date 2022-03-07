@@ -46,6 +46,7 @@ public class CommonController {
             claims.put("id", user.getId().toString());
             claims.put("account", user.getPrincipal().toString());
             claims.put("name", user.getName());
+            claims.put("role", user.getAuthorities().iterator().next().getAuthority());
 
             JwtAuthToken token = tokenProvider.createAuthToken(user.getPrincipal().toString(), user.getAuthorities().iterator().next().getAuthority(), claims, expiredDate);
             MemberVo data = MemberVo.builder()
@@ -71,10 +72,11 @@ public class CommonController {
         return accessToken;
     }
 
-    @PutMapping("/member/use")
-    public ResponseEntity<Response> memberUse(@RequestBody MemberUseDto dto) {
-        if (memberService.memberUse(dto)) {
-            return new ResponseEntity<>(Response.builder().response(Result.builder().build()).contents("success").build(), HttpStatus.OK);
+    @PostMapping("/member/temporary")
+    public ResponseEntity<Response> temporaryMemberIssuance(@RequestBody MemberUseDto dto) {
+        MemberVo vo = memberService.temporaryMemberIssuance(dto);
+        if (vo != null) {
+            return new ResponseEntity<>(Response.builder().response(Result.builder().build()).contents(vo).build(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(Response.builder().response(Result.builder().message("accessToken error").status(500).build()).contents("accessToken error").build(), HttpStatus.BAD_REQUEST);
         }

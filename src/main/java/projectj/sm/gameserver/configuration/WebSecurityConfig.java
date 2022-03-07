@@ -46,6 +46,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .antMatchers("/v1/kakao/login").permitAll()
                     .antMatchers("/v1/member/use").permitAll()
                     .antMatchers("/v1/member/save").permitAll()
+                    .antMatchers("/v1/member/temporary").permitAll()
                     .antMatchers("/v1/**").authenticated()
                 .anyRequest().permitAll()
                 .and().headers().frameOptions().disable()

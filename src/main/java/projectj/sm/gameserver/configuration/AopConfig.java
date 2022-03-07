@@ -28,7 +28,7 @@ public class AopConfig {
     @AfterReturning(value = "execution(* projectj.sm.gameserver.controller.*.*(..)) && " +
             "!execution(* projectj.sm.gameserver.controller.CommonController.login(..)) &&" +
             "!execution(* projectj.sm.gameserver.controller.CommonController.kakaoLogin(..)) &&" +
-            "!execution(* projectj.sm.gameserver.controller.CommonController.memberUse(..)) &&" +
+            "!execution(* projectj.sm.gameserver.controller.CommonController.temporaryMemberIssuance(..)) &&" +
             "!execution(* projectj.sm.gameserver.controller.CommonController.memverSave(..))", returning = "result")
     public Object After(Object result) throws Throwable {
         if (result != null){

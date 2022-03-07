@@ -4,6 +4,7 @@ import projectj.sm.gameserver.domain.Member;
 import projectj.sm.gameserver.dto.MemberDto;
 import projectj.sm.gameserver.dto.MemberUseDto;
 import projectj.sm.gameserver.security.PasswordAuthAuthenticationToken;
+import projectj.sm.gameserver.vo.MemberVo;
 import projectj.sm.gameserver.vo.Result;
 
 import java.util.HashMap;
@@ -14,6 +15,6 @@ public interface MemberService {
     List<Member> getMemberList();
     String getKakaoAccessToken(String code);
     void memberSave(MemberDto dto);
-    boolean memberUse(MemberUseDto dto);
+    MemberVo temporaryMemberIssuance(MemberUseDto dto);
     Result getNewToken();
 }

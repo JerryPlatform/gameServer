@@ -22,6 +22,7 @@ import projectj.sm.gameserver.repository.MemberRepository;
 import projectj.sm.gameserver.security.JwtAuthTokenProvider;
 import projectj.sm.gameserver.security.PasswordAuthAuthenticationToken;
 import projectj.sm.gameserver.service.MemberService;
+import projectj.sm.gameserver.vo.MemberVo;
 import projectj.sm.gameserver.vo.Result;
 
 import java.io.*;
@@ -45,6 +46,7 @@ public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthTokenProvider tokenProvider;
+    private Integer temporaryUserId = 5000;
 
     @Override
     public PasswordAuthAuthenticationToken passwordAuth(String account, String password) throws Exception {
@@ -121,17 +123,27 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.save(member);
     }
 
-    @Transactional
     @Override
-    public boolean memberUse(MemberUseDto dto) {
+    public MemberVo temporaryMemberIssuance(MemberUseDto dto) {
         HashMap<String, Object> userInfo = getKakaoUserInfo(dto.getAccessToken());
         if (userInfo.get("nickname") != null) {
-            Member member = memberRepository.getById(dto.getMemberId());
-            member.setValid(true);
-            memberRepository.save(member);
-            return true;
+            Date expiredDate = Date.from(LocalDateTime.now().plusMinutes(retentionMinutes).atZone(ZoneId.systemDefault()).toInstant());
+            Map<String, String> claims = new HashMap<>();
+            Integer temporaryId = ++temporaryUserId;
+            claims.put("id", temporaryId.toString());
+            claims.put("account", dto.getNickName());
+            claims.put("name", dto.getNickName());
+            claims.put("role", Member.Role.ROLE_USER.toString());
+            String token = tokenProvider.createAuthToken(dto.getNickName(), Member.Role.ROLE_USER.toString(), claims, expiredDate).getToken();
+
+            return MemberVo.builder()
+                    .id(temporaryId.longValue())
+                    .account(dto.getNickName())
+                    .name(dto.getNickName())
+                    .token(token)
+                    .build();
         } else {
-            return false;
+            return null;
         }
     }
 
