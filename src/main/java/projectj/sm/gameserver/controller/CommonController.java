@@ -88,7 +88,7 @@ public class CommonController {
             user = memberService.passwordAuth(loginDto.getAccount(), loginDto.getPassword());
         } catch (LockedException e) {
             return new ResponseEntity<>(Response.builder()
-                    .response(Result.builder().message("kakao login authentication required").status(500).build())
+                    .response(Result.builder().message("kakao login authentication required").status(401).build())
                     .contents("kakao login authentication required")
                     .build(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
