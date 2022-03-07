@@ -36,12 +36,13 @@ public class MemberServiceImpl implements MemberService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public PasswordAuthAuthenticationToken passwordAuth(String account, String password) {
+    public PasswordAuthAuthenticationToken passwordAuth(String account, String password) throws Exception {
         PasswordAuthAuthenticationToken token = new PasswordAuthAuthenticationToken(account, password);
-        Authentication authentication = null;
+        Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(token);
         } catch (LockedException e) { throw new LockedException(ErrorCode.LOCKED.getMessage()); }
+          catch (Exception e) { throw new Exception(ErrorCode.LOGIN_FAILED.getMessage()); }
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return (PasswordAuthAuthenticationToken) authentication;
     }

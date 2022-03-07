@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public interface MemberService {
-    PasswordAuthAuthenticationToken passwordAuth(String account, String password);
+    PasswordAuthAuthenticationToken passwordAuth(String account, String password) throws Exception;
     List<Member> getMemberList();
     String getKakaoAccessToken(String code);
     void memberSave(MemberDto dto);

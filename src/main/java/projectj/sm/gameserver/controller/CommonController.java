@@ -91,6 +91,11 @@ public class CommonController {
                     .response(Result.builder().message("kakao login authentication required").status(401).build())
                     .contents("kakao login authentication required")
                     .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            return new ResponseEntity<>(Response.builder()
+                    .response(Result.builder().message("login error").status(500).build())
+                    .contents("login error")
+                    .build(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         MemberVo vo = makeToken.apply(user);
         if (vo == null) {
