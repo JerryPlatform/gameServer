@@ -1,2 +1,10 @@
 type Query {
+    getNewToken : Result
+}
+
+type Result {
+    message : String
+    status : Int
+    errorCode : String
+    token : String
 }

@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
@@ -12,28 +13,38 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import projectj.sm.gameserver.ContextUtil;
 import projectj.sm.gameserver.domain.Member;
 import projectj.sm.gameserver.dto.MemberDto;
 import projectj.sm.gameserver.dto.MemberUseDto;
 import projectj.sm.gameserver.exception.ErrorCode;
 import projectj.sm.gameserver.repository.MemberRepository;
+import projectj.sm.gameserver.security.JwtAuthTokenProvider;
 import projectj.sm.gameserver.security.PasswordAuthAuthenticationToken;
 import projectj.sm.gameserver.service.MemberService;
+import projectj.sm.gameserver.vo.Result;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Log
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
+    @Value("${gameServer.login.retention}")
+    private long retentionMinutes;
     private final AuthenticationManager authenticationManager;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtAuthTokenProvider tokenProvider;
 
     @Override
     public PasswordAuthAuthenticationToken passwordAuth(String account, String password) throws Exception {
@@ -122,6 +133,24 @@ public class MemberServiceImpl implements MemberService {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public Result getNewToken() {
+        Map<String, String> claims = new HashMap<>();
+        Date expiredDate = Date.from(LocalDateTime.now().plusMinutes(retentionMinutes).atZone(ZoneId.systemDefault()).toInstant());
+        claims.put("id", ContextUtil.getCredential().getId().toString());
+        claims.put("account", ContextUtil.getCredential().getAccount());
+        claims.put("name", ContextUtil.getCredential().getName());
+        claims.put("role", ContextUtil.getCredential().getRole().toString());
+        String token = tokenProvider.createAuthToken(ContextUtil.getCredential().getAccount(), ContextUtil.getCredential().getRole().toString(), claims, expiredDate).getToken();
+
+        return Result.builder()
+                .message("success")
+                .status(200)
+                .errorCode(null)
+                .token(token)
+                .build();
     }
 
     public HashMap<String, Object> getKakaoUserInfo(String accessToken) {
