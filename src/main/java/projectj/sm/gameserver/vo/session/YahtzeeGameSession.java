@@ -16,6 +16,7 @@ public class YahtzeeGameSession {
     private Integer userCount;
     private Integer remainingTurns;
     private String turnUserName;
+    private Long turnUserId;
     private List<userInfo> userInfos;
 
     @Getter

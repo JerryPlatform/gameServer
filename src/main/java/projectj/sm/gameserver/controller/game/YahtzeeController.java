@@ -42,8 +42,11 @@ public class YahtzeeController {
         for (YahtzeeGameSession.userInfo userInfo : yahtzeeGameSession.getUserInfos()) {
             if (userInfo.getSimpSessionId().equals(dto.getSimpSessionId())) {
                 yahtzeeGameSession.setRemainingTurns(yahtzeeGameSession.getRemainingTurns() - 1);
-                yahtzeeGameSession.setTurnUserName(yahtzeeGameSession.getUserInfos()
-                        .get(yahtzeeGameSession.getRemainingTurns() % yahtzeeGameSession.getUserCount()).getUserName());
+
+                YahtzeeGameSession.userInfo turnUser = yahtzeeGameSession.getUserInfos()
+                        .get(yahtzeeGameSession.getRemainingTurns() % yahtzeeGameSession.getUserCount());
+                yahtzeeGameSession.setTurnUserId(turnUser.getUserId());
+                yahtzeeGameSession.setTurnUserName(turnUser.getUserName());
                 scoreInsert(userInfo, dto.getScoreType(), dto.getScore());
                 yahtzeeService.gameScoreTransfer(dto.getRoomId());
             }
@@ -117,6 +120,7 @@ public class YahtzeeController {
             session.getUserInfos().removeIf(userInfo -> userInfo.equals(roomOutUser));
             session.setUserCount(session.getUserInfos().size());
             int turn = session.getRemainingTurns() % session.getUserCount();
+            session.setTurnUserId(session.getUserInfos().get(turn).getUserId());
             session.setTurnUserName(session.getUserInfos().get(turn).getUserName());
             yahtzeeService.gameScoreTransfer(Long.valueOf(roomId));
             log.info("★");
