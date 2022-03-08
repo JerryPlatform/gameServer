@@ -79,7 +79,6 @@ public class YahtzeeServiceImpl implements YahtzeeService {
                 .fours(getScore(diceCount,"fours"))
                 .fives(getScore(diceCount,"fives"))
                 .sixes(getScore(diceCount,"sixes"))
-                .threeOfKind(getScore(diceCount,"threeOfKind"))
                 .fourOfKind(getScore(diceCount,"fourOfKind"))
                 .fullHouse(getScore(diceCount,"fullHouse"))
                 .smallStraight(getScore(diceCount,"smallStraight"))
@@ -108,17 +107,6 @@ public class YahtzeeServiceImpl implements YahtzeeService {
                 return diceCount[4] * 5;
             case "sixes":
                 return diceCount[5] * 6;
-            case "threeOfKind":
-                for (Integer i : diceCount) {
-                    if (i.equals(3)) {
-                        return
-                        (diceCount[0] * 1) + (diceCount[1] * 2) + (diceCount[2] * 3) +
-                        (diceCount[3] * 4) + (diceCount[4] * 5) + (diceCount[5] * 6);
-                    } else {
-                        return 0;
-                    }
-                }
-                break;
             case "fourOfKind":
                 for (Integer i : diceCount) {
                     if (i.equals(4)) {

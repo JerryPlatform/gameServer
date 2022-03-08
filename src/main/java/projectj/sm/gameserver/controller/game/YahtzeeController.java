@@ -183,10 +183,6 @@ public class YahtzeeController {
                     userInfo.setTotalScore(userInfo.getTotalScore() + 35);
                 }
                 break;
-            case "threeOfKind":
-                userInfo.setThreeOfKind(score);
-                userInfo.setTotalScore(userInfo.getTotalScore() + score);
-                break;
             case "fourOfKind":
                 userInfo.setFourOfKind(score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);

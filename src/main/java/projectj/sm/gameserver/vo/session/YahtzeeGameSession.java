@@ -39,7 +39,6 @@ public class YahtzeeGameSession {
 
         private Integer bonus;
 
-        private Integer threeOfKind;
         private Integer fourOfKind;
         private Integer fullHouse;
         private Integer smallStraight;

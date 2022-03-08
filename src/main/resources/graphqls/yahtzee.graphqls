@@ -17,7 +17,6 @@ type userInfo {
     sixes : Int
     generalScoreTotal : Int
     bonus : Int
-    threeOfKind : Int
     fourOfKind : Int
     fullHouse : Int
     smallStraight : Int

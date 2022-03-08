@@ -1,6 +1,7 @@
 package projectj.sm.gameserver.service.Impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 import static projectj.sm.gameserver.controller.chat.ChatController.userChatSessions;
 import static projectj.sm.gameserver.controller.game.YahtzeeController.yahtzeeGameSessions;
 
+@Log
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -69,7 +71,6 @@ public class GameServiceImpl implements GameService {
                             .sixes(0)
                             .generalScoreTotal(0)
                             .bonus(0)
-                            .threeOfKind(0)
                             .fourOfKind(0)
                             .fullHouse(0)
                             .smallStraight(0)
@@ -80,11 +81,12 @@ public class GameServiceImpl implements GameService {
                             .build();
                     userInfos.add(userInfo);
                 }
+                log.info("★☆" + userInfos.size());
                 yahtzeeGameSessions.add(YahtzeeGameSession.builder()
                         .roomId(roomId)
                         .userCount(userInfos.size())
                         .remainingTurns(12 * userInfos.size())
-                        .turnUserName(userInfos.get(0).getUserName())
+                        .turnUserName(userInfos.get((12 * userInfos.size()) % userInfos.size()).getUserName())
                         .userInfos(userInfos)
                         .build());
     }
