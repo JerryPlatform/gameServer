@@ -81,7 +81,6 @@ public class GameServiceImpl implements GameService {
                             .build();
                     userInfos.add(userInfo);
                 }
-                log.info("★☆" + userInfos.size());
                 yahtzeeGameSessions.add(YahtzeeGameSession.builder()
                         .roomId(roomId)
                         .userCount(userInfos.size())

@@ -11,7 +11,7 @@ public interface ChatRoomRepository extends JpaRepository<Room, Long> {
     @Query("select room from Room room where room.type = :type ")
     List<Room> getChatRoomListByType(Room.Type type);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("update Room r set r.status = :status where r.id = :id ")
     void changeRoomStatus(Long id, Room.Status status);
 }

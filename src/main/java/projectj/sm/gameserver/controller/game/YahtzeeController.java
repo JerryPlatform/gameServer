@@ -123,7 +123,6 @@ public class YahtzeeController {
             session.setTurnUserId(session.getUserInfos().get(turn).getUserId());
             session.setTurnUserName(session.getUserInfos().get(turn).getUserName());
             yahtzeeService.gameScoreTransfer(Long.valueOf(roomId));
-            log.info("★");
         }
     }
 
