@@ -64,53 +64,6 @@ public class YahtzeeController {
         return yahtzeeService.getYahtzeeGameRank();
     }
 
-    @EventListener
-    public void sessionSubscribeEvent(SessionSubscribeEvent event) throws JsonProcessingException {
-        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
-        String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
-        String redisKey = simpSessionId + "/" + simpSubscriptionId;
-
-        if (subscribeAddress.contains("/sub/yahtzee/score/")) {
-            redisUtil.setData(redisKey, subscribeAddress);
-
-            Long roomId = Long.valueOf(subscribeAddress.split("/sub/yahtzee/score/")[1]);
-            Room.Status status = chatRoomService.findByChatRoomStatus(roomId);
-            if (status.equals(Room.Status.PROCEEDING)) {
-                YahtzeeGameSession session = yahtzeeGameSessions.stream()
-                        .filter(yahtzeeGameSession -> yahtzeeGameSession.getRoomId().equals(roomId))
-                        .findFirst().get();
-                String message = CommonUtil.objectToJsonString(session);
-                template.convertAndSend("/sub/yahtzee/score/" + roomId, message);
-            }
-        }
-    }
-
-    @EventListener
-    public void sessionDisconnectEvent(SessionDisconnectEvent event) throws JsonProcessingException {
-        Set<String> keys = redisUtil.getFindKeys(event.getSessionId());
-        for (String key : keys) {
-            String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-            String subscribeAddress = redisUtil.getData(key);
-
-            if (subscribeAddress != null && subscribeAddress.contains("/sub/yahtzee/score/")) {
-                subYahtzeeScoreUnsubscribeOrDisconnectProcess(simpSessionId, subscribeAddress);
-            }
-        }
-    }
-
-    @EventListener
-    public void sessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
-        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
-        String redisKey = simpSessionId + "/" + simpSubscriptionId;
-        String subscribeAddress = redisUtil.getData(redisKey);
-
-        if (subscribeAddress != null && subscribeAddress.contains("/sub/yahtzee/score/")) {
-            subYahtzeeScoreUnsubscribeOrDisconnectProcess(simpSessionId, subscribeAddress);
-        }
-    }
-
     public void subYahtzeeScoreUnsubscribeOrDisconnectProcess(String simpSessionId, String subscribeAddress) throws JsonProcessingException {
         Integer roomId = Integer.valueOf(subscribeAddress.split("/sub/yahtzee/score/")[1]);
         Room.Status roomStatus = chatRoomService.findByChatRoomStatus(Long.valueOf(roomId));
@@ -151,82 +104,118 @@ public class YahtzeeController {
     }
 
     public void scoreInsert(YahtzeeGameSession.userInfo userInfo, String scoreType, Integer score) {
+        if (userInfo.getTotalScore() == null) {
+            userInfo.setTotalScore(new Integer(0));
+        }
+         if (userInfo.getGeneralScoreTotal() == null) {
+            userInfo.setGeneralScoreTotal(new Integer(0));
+        }
         switch (scoreType) {
             case "ones":
+                userInfo.setOnes(new Integer(0));
                 userInfo.setOnes(score);
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
-                if (bonusScoreCheck(userInfo)) {
-                    userInfo.setBonus(35);
-                    userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                if (userInfo.getBonus() == null) {
+                    if (bonusScoreCheck(userInfo)) {
+                        userInfo.setBonus(new Integer(0));
+                        userInfo.setBonus(35);
+                        userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                    }
                 }
                 break;
             case "twos":
+                userInfo.setTwos(new Integer(0));
                 userInfo.setTwos(score);
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
-                if (bonusScoreCheck(userInfo)) {
-                    userInfo.setBonus(35);
-                    userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                if (userInfo.getBonus() == null) {
+                    if (bonusScoreCheck(userInfo)) {
+                        userInfo.setBonus(new Integer(0));
+                        userInfo.setBonus(35);
+                        userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                    }
                 }
                 break;
             case "threes":
+                userInfo.setThrees(new Integer(0));
                 userInfo.setThrees(score);
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
-                if (bonusScoreCheck(userInfo)) {
-                    userInfo.setBonus(35);
-                    userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                if (userInfo.getBonus() == null) {
+                    if (bonusScoreCheck(userInfo)) {
+                        userInfo.setBonus(new Integer(0));
+                        userInfo.setBonus(35);
+                        userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                    }
                 }
                 break;
             case "fours":
+                userInfo.setFours(new Integer(0));
                 userInfo.setFours(score);
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
-                if (bonusScoreCheck(userInfo)) {
-                    userInfo.setBonus(35);
-                    userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                if (userInfo.getBonus() == null) {
+                    if (bonusScoreCheck(userInfo)) {
+                        userInfo.setBonus(new Integer(0));
+                        userInfo.setBonus(35);
+                        userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                    }
                 }
                 break;
             case "fives":
+                userInfo.setFives(new Integer(0));
                 userInfo.setFives(score);
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
-                if (bonusScoreCheck(userInfo)) {
-                    userInfo.setBonus(35);
-                    userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                if (userInfo.getBonus() == null) {
+                    if (bonusScoreCheck(userInfo)) {
+                        userInfo.setBonus(new Integer(0));
+                        userInfo.setBonus(35);
+                        userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                    }
                 }
                 break;
             case "sixes":
+                userInfo.setSixes(new Integer(0));
                 userInfo.setSixes(score);
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
-                if (bonusScoreCheck(userInfo)) {
-                    userInfo.setBonus(35);
-                    userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                if (userInfo.getBonus() == null) {
+                    if (bonusScoreCheck(userInfo)) {
+                        userInfo.setBonus(new Integer(0));
+                        userInfo.setBonus(35);
+                        userInfo.setTotalScore(userInfo.getTotalScore() + 35);
+                    }
                 }
                 break;
             case "fourOfKind":
+                userInfo.setFourOfKind(new Integer(0));
                 userInfo.setFourOfKind(score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "fullHouse":
+                userInfo.setFullHouse(new Integer(0));
                 userInfo.setFullHouse(score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "smallStraight":
+                userInfo.setSmallStraight(new Integer(0));
                 userInfo.setSmallStraight(score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "largeStraight":
+                userInfo.setLargeStraight(new Integer(0));
                 userInfo.setLargeStraight(score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "chance":
+                userInfo.setChance(new Integer(0));
                 userInfo.setChance(score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "yahtzee":
+                userInfo.setYahtzee(new Integer(0));
                 userInfo.setYahtzee(score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
@@ -234,8 +223,14 @@ public class YahtzeeController {
     }
 
     public boolean bonusScoreCheck(YahtzeeGameSession.userInfo userInfo) {
-        Integer score = userInfo.getOnes() + userInfo.getTwos() + userInfo.getThrees()
-                + userInfo.getFours() + userInfo.getFives() + userInfo.getSixes();
+        Integer one = userInfo.getOnes() == null ? 0 : userInfo.getOnes();
+        Integer two = userInfo.getTwos() == null ? 0 : userInfo.getTwos();
+        Integer three = userInfo.getThrees() == null ? 0 : userInfo.getThrees();
+        Integer four = userInfo.getFours() == null ? 0 : userInfo.getFours();
+        Integer five = userInfo.getFives() == null ? 0 : userInfo.getFives();
+        Integer six = userInfo.getSixes() == null ? 0 : userInfo.getSixes();
+
+        Integer score = one + two + three + four + five + six;
         if (score >= 63) {
             return true;
         } else {

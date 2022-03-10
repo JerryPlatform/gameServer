@@ -76,63 +76,6 @@ public class ChatController {
         }
     }
 
-    @EventListener
-    public void sessionSubscribeEvent(SessionSubscribeEvent event) throws JsonProcessingException {
-        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
-        String subscribeAddress = CommonUtil.extractDataFromEventMessages(event, "destination");
-        String redisKey = simpSessionId + "/" + simpSubscriptionId;
-
-        if (subscribeAddress.contains("/sub/chatroom/list/")) {
-            redisUtil.setData(redisKey, subscribeAddress);
-            updateChatRoomListAll();
-        }
-
-        if (subscribeAddress.contains("/sub/chatting/chatroom/")) {
-            redisUtil.setData(redisKey, subscribeAddress);
-            Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
-            createUserChatSession(chatRoomId, simpSessionId);
-            userChatRoomSessionSynchroization(chatRoomId);
-            UserChatSession userInfo = getSessionUser(simpSessionId);
-
-            String message = notificationMessageMapping(userInfo.getUserName() + "님이 채팅방에 입장하였습니다.");
-            template.convertAndSend("/sub/chatting/chatroom/" + chatRoomId, message);
-        }
-    }
-
-    @EventListener
-    public void sessionDisconnectEvent(SessionDisconnectEvent event) throws JsonProcessingException {
-        Set<String> keys = redisUtil.getFindKeys(event.getSessionId());
-        for (String key : keys) {
-            String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-            String subscribeAddress = redisUtil.getData(key);
-
-            if (subscribeAddress != null && subscribeAddress.contains("/sub/chatroom/list/")) {
-                redisUtil.deleteData(key);
-                updateChatRoomListAll();
-            }
-            if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
-                subChattingChatroomUnsubscribeOrDisconnectProcess(simpSessionId, key, subscribeAddress);
-            }
-        }
-    }
-
-    @EventListener
-    public void sessionUnsubscribeEvent(SessionUnsubscribeEvent event) throws JsonProcessingException {
-        String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-        String simpSubscriptionId = event.getMessage().getHeaders().get("simpSubscriptionId").toString();
-        String redisKey = simpSessionId + "/" + simpSubscriptionId;
-        String subscribeAddress = redisUtil.getData(redisKey);
-
-        if (subscribeAddress != null && subscribeAddress.contains("/sub/chatroom/list/")) {
-            redisUtil.deleteData(redisKey);
-            updateChatRoomListAll();
-        }
-        if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
-            subChattingChatroomUnsubscribeOrDisconnectProcess(simpSessionId, redisKey, subscribeAddress);
-        }
-    }
-
     public void subChattingChatroomUnsubscribeOrDisconnectProcess(String simpSessionId, String redisKey, String subscribeAddress) throws JsonProcessingException {
         UserChatSession userInfo = getSessionUser(simpSessionId);
         Long chatRoomId = Long.parseLong(subscribeAddress.split("/sub/chatting/chatroom/")[1]);
