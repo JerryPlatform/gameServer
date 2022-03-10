@@ -37,7 +37,6 @@ public class GameController {
         gameService.changeRoomStatusByStartingTheGame(roomId);
         chatRoomService.updateChatRoomList(type);
         createGameSession(roomId);
-        yahtzeeService.scoreInitialization(roomId);
     }
 
     @PutMapping("/room/{roomId}/end")
