@@ -28,21 +28,21 @@ public class sessionDisconnectEvent {
     @EventListener
     public void sessionDisconnectEvent(SessionDisconnectEvent event) throws JsonProcessingException {
         Set<String> keys = redisUtil.getFindKeys(event.getSessionId());
-        for (String key : keys) {
-            String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
-            String subscribeAddress = redisUtil.getData(key);
-
-            if (subscribeAddress != null && subscribeAddress.contains("/sub/chatroom/list/")) {
-                redisUtil.deleteData(key);
-                chatController.updateChatRoomListAll();
-            }
-            if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
-                chatController.subChattingChatroomUnsubscribeOrDisconnectProcess(simpSessionId, key, subscribeAddress);
-            }
-
-            if (subscribeAddress != null && subscribeAddress.contains("/sub/yahtzee/score/")) {
-                yahtzeeController.subYahtzeeScoreUnsubscribeOrDisconnectProcess(simpSessionId, subscribeAddress);
-            }
-        }
+//        for (String key : keys) {
+//            String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
+//            String subscribeAddress = redisUtil.getData(key);
+//
+//            if (subscribeAddress != null && subscribeAddress.contains("/sub/chatroom/list/")) {
+//                redisUtil.deleteData(key);
+//                chatController.updateChatRoomListAll();
+//            }
+//            if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
+//                chatController.subChattingChatroomUnsubscribeOrDisconnectProcess(simpSessionId, key, subscribeAddress);
+//            }
+//
+//            if (subscribeAddress != null && subscribeAddress.contains("/sub/yahtzee/score/")) {
+//                yahtzeeController.subYahtzeeScoreUnsubscribeOrDisconnectProcess(simpSessionId, subscribeAddress);
+//            }
+//        }
     }
 }
