@@ -84,6 +84,7 @@ public class ChatController {
         String redisKey = simpSessionId + "/" + simpSubscriptionId;
 
         if (subscribeAddress.contains("/sub/chatroom/list/")) {
+            redisUtil.setData(redisKey, subscribeAddress);
             updateChatRoomListAll();
         }
 
@@ -106,6 +107,10 @@ public class ChatController {
             String simpSessionId = event.getMessage().getHeaders().get("simpSessionId").toString();
             String subscribeAddress = redisUtil.getData(key);
 
+            if (subscribeAddress != null && subscribeAddress.contains("/sub/chatroom/list/")) {
+                redisUtil.deleteData(key);
+                updateChatRoomListAll();
+            }
             if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
                 subChattingChatroomUnsubscribeOrDisconnectProcess(simpSessionId, key, subscribeAddress);
             }
@@ -119,6 +124,10 @@ public class ChatController {
         String redisKey = simpSessionId + "/" + simpSubscriptionId;
         String subscribeAddress = redisUtil.getData(redisKey);
 
+        if (subscribeAddress != null && subscribeAddress.contains("/sub/chatroom/list/")) {
+            redisUtil.deleteData(redisKey);
+            updateChatRoomListAll();
+        }
         if (subscribeAddress != null && subscribeAddress.contains("/sub/chatting/chatroom/")) {
             subChattingChatroomUnsubscribeOrDisconnectProcess(simpSessionId, redisKey, subscribeAddress);
         }
