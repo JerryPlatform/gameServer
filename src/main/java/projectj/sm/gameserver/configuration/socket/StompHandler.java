@@ -54,9 +54,6 @@ public class StompHandler implements ChannelInterceptor {
                 redisUtil.updateKey(key, Duration.ofHours(3));
             }
         }
-        if (message.getHeaders().get("simpMessageType").toString().contains("DISCONNECT")) {
-            redisUtil.deleteData(accessor.getSessionId());
-        }
 
         return message;
     }
