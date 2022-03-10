@@ -45,6 +45,7 @@ public class GameController {
         reflectionOfGameResults(roomId);
         gameService.changeRoomStatusByEndingTheGame(roomId);
         chatRoomService.updateChatRoomList(type);
+        yahtzeeService.gameScoreTransfer(roomId);
         removeGameSession(roomId);
     }
 
