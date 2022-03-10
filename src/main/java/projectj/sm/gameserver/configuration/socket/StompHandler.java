@@ -16,6 +16,7 @@ import projectj.sm.gameserver.security.JwtAuthTokenProvider;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
 
 @Log
 @Component
@@ -48,7 +49,10 @@ public class StompHandler implements ChannelInterceptor {
         }
         if (message.getHeaders().get("simpMessageType").toString().contains("SUBSCRIBE") ||
             message.getHeaders().get("simpMessageType").toString().contains("UNSUBSCRIBE")) {
-            redisUtil.updateKey(accessor.getSessionId(), Duration.ofHours(3));
+            Set<String> keys = redisUtil.getFindKeys(accessor.getSessionId());
+            for (String key : keys) {
+                redisUtil.updateKey(key, Duration.ofHours(3));
+            }
         }
         if (message.getHeaders().get("simpMessageType").toString().contains("DISCONNECT")) {
             redisUtil.deleteData(accessor.getSessionId());
