@@ -30,8 +30,7 @@ import java.util.*;
 @EnableScheduling
 @RequiredArgsConstructor
 public class YahtzeeController {
-    private final RedisUtil redisUtil;
-    private final SimpMessagingTemplate template;
+    private final GameController gameController;
     private final ChatRoomService chatRoomService;
     private final YahtzeeService yahtzeeService;
     private final GameService gameService;
@@ -50,6 +49,11 @@ public class YahtzeeController {
                 yahtzeeGameSession.setTurnUserName(turnUser.getUserName());
                 scoreInsert(userInfo, dto.getScoreType(), dto.getScore());
                 yahtzeeService.gameScoreTransfer(dto.getRoomId());
+
+                if (yahtzeeGameSession.getRemainingTurns() == 0) {
+                    gameController.changeRoomStatusByEndingTheGame(dto.getRoomId());
+                    yahtzeeService.gameScoreTransfer(dto.getRoomId());
+                }
             }
         }
     }
@@ -112,8 +116,7 @@ public class YahtzeeController {
         }
         switch (scoreType) {
             case "ones":
-                userInfo.setOnes(new Integer(0));
-                userInfo.setOnes(score);
+                userInfo.setOnes(new Integer(score));
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 if (userInfo.getBonus() == null) {
@@ -125,8 +128,7 @@ public class YahtzeeController {
                 }
                 break;
             case "twos":
-                userInfo.setTwos(new Integer(0));
-                userInfo.setTwos(score);
+                userInfo.setTwos(new Integer(score));
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 if (userInfo.getBonus() == null) {
@@ -138,8 +140,7 @@ public class YahtzeeController {
                 }
                 break;
             case "threes":
-                userInfo.setThrees(new Integer(0));
-                userInfo.setThrees(score);
+                userInfo.setThrees(new Integer(score));
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 if (userInfo.getBonus() == null) {
@@ -151,8 +152,7 @@ public class YahtzeeController {
                 }
                 break;
             case "fours":
-                userInfo.setFours(new Integer(0));
-                userInfo.setFours(score);
+                userInfo.setFours(new Integer(score));
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 if (userInfo.getBonus() == null) {
@@ -164,8 +164,7 @@ public class YahtzeeController {
                 }
                 break;
             case "fives":
-                userInfo.setFives(new Integer(0));
-                userInfo.setFives(score);
+                userInfo.setFives(new Integer(score));
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 if (userInfo.getBonus() == null) {
@@ -177,8 +176,7 @@ public class YahtzeeController {
                 }
                 break;
             case "sixes":
-                userInfo.setSixes(new Integer(0));
-                userInfo.setSixes(score);
+                userInfo.setSixes(new Integer(score));
                 userInfo.setGeneralScoreTotal(userInfo.getGeneralScoreTotal() + score);
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 if (userInfo.getBonus() == null) {
@@ -190,33 +188,27 @@ public class YahtzeeController {
                 }
                 break;
             case "fourOfKind":
-                userInfo.setFourOfKind(new Integer(0));
-                userInfo.setFourOfKind(score);
+                userInfo.setFourOfKind(new Integer(score));
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "fullHouse":
-                userInfo.setFullHouse(new Integer(0));
-                userInfo.setFullHouse(score);
+                userInfo.setFullHouse(new Integer(score));
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "smallStraight":
-                userInfo.setSmallStraight(new Integer(0));
-                userInfo.setSmallStraight(score);
+                userInfo.setSmallStraight(new Integer(score));
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "largeStraight":
-                userInfo.setLargeStraight(new Integer(0));
-                userInfo.setLargeStraight(score);
+                userInfo.setLargeStraight(new Integer(score));
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "chance":
-                userInfo.setChance(new Integer(0));
-                userInfo.setChance(score);
+                userInfo.setChance(new Integer(score));
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
             case "yahtzee":
-                userInfo.setYahtzee(new Integer(0));
-                userInfo.setYahtzee(score);
+                userInfo.setYahtzee(new Integer(score));
                 userInfo.setTotalScore(userInfo.getTotalScore() + score);
                 break;
         }
