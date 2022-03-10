@@ -134,7 +134,7 @@ public class YahtzeeServiceImpl implements YahtzeeService {
                 return diceCount[5] * 6;
             case "fourOfKind":
                 for (Integer i : diceCount) {
-                    if (i.equals(4)) {
+                    if (i.equals(4) || i.equals(5)) {
                         return
                         (diceCount[0] * 1) + (diceCount[1] * 2) + (diceCount[2] * 3) +
                         (diceCount[3] * 4) + (diceCount[4] * 5) + (diceCount[5] * 6);
