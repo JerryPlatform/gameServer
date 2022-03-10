@@ -12,6 +12,7 @@ import projectj.sm.gameserver.CommonUtil;
 import projectj.sm.gameserver.domain.chat.Room;
 import projectj.sm.gameserver.service.ChatRoomService;
 import projectj.sm.gameserver.service.GameService;
+import projectj.sm.gameserver.service.YahtzeeService;
 import projectj.sm.gameserver.vo.session.YahtzeeGameSession;
 
 import static projectj.sm.gameserver.controller.game.YahtzeeController.yahtzeeGameSessions;
@@ -24,6 +25,8 @@ public class GameController {
 
     private final GameService gameService;
 
+    private final YahtzeeService yahtzeeService;
+
     private final ChatRoomService chatRoomService;
 
     private final SimpMessagingTemplate template;
@@ -34,6 +37,7 @@ public class GameController {
         gameService.changeRoomStatusByStartingTheGame(roomId);
         chatRoomService.updateChatRoomList(type);
         createGameSession(roomId);
+        yahtzeeService.scoreInitialization(roomId);
     }
 
     @PutMapping("/room/{roomId}/end")

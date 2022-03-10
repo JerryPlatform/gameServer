@@ -10,7 +10,6 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class YahtzeeGameSession {
     private Long roomId;
     private Integer userCount;
@@ -22,7 +21,6 @@ public class YahtzeeGameSession {
     @Getter
     @Setter
     @Builder
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class userInfo {
         private String simpSessionId;
         private Long userId;

@@ -12,4 +12,5 @@ public interface YahtzeeService {
     void gameScoreTransfer(Long roomId) throws JsonProcessingException;
     YahtzeeGameSession.userInfo getExpectedScore(ExpectedScoreDto dto);
     List<YahtzeeGameRankVo> getYahtzeeGameRank();
+    void scoreInitialization(Long roomId);
 }

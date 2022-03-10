@@ -93,6 +93,31 @@ public class YahtzeeServiceImpl implements YahtzeeService {
         return yahtzeeGameResultRepository.findTop10ByOrderByTotalScoreDesc().stream().map(rankMap).collect(Collectors.toList());
     }
 
+    @Override
+    public void scoreInitialization(Long roomId) {
+        YahtzeeGameSession session = yahtzeeGameSessions.stream()
+                    .filter(yahtzeeGameSession -> yahtzeeGameSession.getRoomId().equals(roomId))
+                    .findFirst().get();
+
+        for (YahtzeeGameSession.userInfo userInfo : session.getUserInfos()) {
+            userInfo.setOnes(new Integer(0));
+            userInfo.setTwos(new Integer(0));
+            userInfo.setThrees(new Integer(0));
+            userInfo.setFours(new Integer(0));
+            userInfo.setFives(new Integer(0));
+            userInfo.setSixes(new Integer(0));
+            userInfo.setGeneralScoreTotal(new Integer(0));
+            userInfo.setBonus(new Integer(0));
+            userInfo.setFourOfKind(new Integer(0));
+            userInfo.setFullHouse(new Integer(0));
+            userInfo.setSmallStraight(new Integer(0));
+            userInfo.setLargeStraight(new Integer(0));
+            userInfo.setChance(new Integer(0));
+            userInfo.setYahtzee(new Integer(0));
+            userInfo.setTotalScore(new Integer(0));
+        }
+    }
+
     public static Integer getScore(Integer[] diceCount, String scoreType) {
         switch (scoreType) {
             case "ones":
