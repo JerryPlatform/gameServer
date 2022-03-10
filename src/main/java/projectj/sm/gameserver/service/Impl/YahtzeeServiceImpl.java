@@ -138,9 +138,9 @@ public class YahtzeeServiceImpl implements YahtzeeService {
                         return
                         (diceCount[0] * 1) + (diceCount[1] * 2) + (diceCount[2] * 3) +
                         (diceCount[3] * 4) + (diceCount[4] * 5) + (diceCount[5] * 6);
-                    } else { return 0; }
+                    }
                 }
-                break;
+                return 0;
             case "fullHouse":
                 boolean check1 = false;
                 boolean check2 = false;
